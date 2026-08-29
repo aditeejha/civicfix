@@ -9,6 +9,66 @@ interface CreateComplaintData {
   longitude: number;
 }
 
+export async function getMyComplaints(citizenId: string) {
+  return prisma.complaint.findMany({
+    where: {
+      citizenId,
+    },
+    include: {
+      issue: {
+        include: {
+          department: true,
+          ward: true,
+          sla: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+export async function getComplaintById(
+  complaintId: string,
+  citizenId: string
+) {
+  return prisma.complaint.findFirst({
+    where: {
+      id: complaintId,
+      citizenId,
+    },
+    include: {
+      issue: {
+        include: {
+          department: true,
+          ward: true,
+          sla: true,
+          statusHistory: {
+            orderBy: {
+              createdAt: "asc",
+            },
+          },
+          assignments: {
+            include: {
+              authority: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  role: true,
+                },
+              },
+              department: true,
+              ward: true,
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
 export async function createComplaint(data: CreateComplaintData) {
   const address = await reverseGeocode(
     data.latitude,

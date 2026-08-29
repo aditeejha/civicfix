@@ -4,6 +4,8 @@ import cors from "cors";
 import { prisma } from "./lib/prisma";
 import authRoutes from "./routes/auth.routes";
 import complaintRoutes from "./routes/complaint.routes";
+import issueRoutes from "./routes/issue.routes";
+import upvoteRoutes from "./routes/upvote.routes";
 import {
   authenticate,
   AuthenticatedRequest,
@@ -16,6 +18,13 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/complaints", complaintRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/complaints", complaintRoutes);
+app.use("/api/issues", issueRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/complaints", complaintRoutes);
+app.use("/api/issues", issueRoutes);
+app.use("/api/issues", upvoteRoutes);
 
 app.get("/", (_req, res) => {
   res.json({
