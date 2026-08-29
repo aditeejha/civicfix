@@ -51,3 +51,111 @@ export async function createSLA(
     },
   });
 }
+
+export async function checkSLABreaches() {
+  const now = new Date();
+
+  const breachedSLAs = await prisma.sLA.findMany({
+    where: {
+      deadline: {
+        lt: now,
+      },
+      breached: false,
+      issue: {
+        status: {
+          notIn: ["RESOLVED", "CLOSED"],
+        },
+      },
+    },
+    include: {
+      issue: true,
+    },
+  });
+
+  if (breachedSLAs.length === 0) {
+    return [];
+  }
+
+  const results = [];
+
+  for (const sla of breachedSLAs) {
+    const result = await prisma.$transaction(async (tx) => {
+      const updatedSLA = await tx.sLA.update({
+        where: {
+          id: sla.id,
+        },
+        data: {
+          breached: true,
+          breachedAt: now,
+        },
+      });
+
+      const updatedIssue = await tx.issue.update({
+        where: {
+          id: sla.issueId,
+        },
+        data: {
+          status: "SLA_BREACHED",
+        },
+      });
+
+      await tx.statusHistory.create({
+        data: {
+          issueId: sla.issueId,
+          status: "SLA_BREACHED",
+          note: "Issue exceeded its SLA deadline",
+        },
+      });
+
+      return {
+        sla: updatedSLA,
+        issue: updatedIssue,
+      };
+    });
+
+    results.push(result);
+  }
+
+  return results;
+}
+
+export async function escalateBreachedIssues() {
+  const breachedIssues = await prisma.issue.findMany({
+    where: {
+      status: "SLA_BREACHED",
+    },
+  });
+
+  if (breachedIssues.length === 0) {
+    return [];
+  }
+
+  const results = [];
+
+  for (const issue of breachedIssues) {
+    const result = await prisma.$transaction(async (tx) => {
+      const updatedIssue = await tx.issue.update({
+        where: {
+          id: issue.id,
+        },
+        data: {
+          status: "ESCALATED",
+        },
+      });
+
+      await tx.statusHistory.create({
+        data: {
+          issueId: issue.id,
+          status: "ESCALATED",
+          note: "Issue escalated after SLA breach",
+        },
+      });
+
+      return updatedIssue;
+    });
+
+    results.push(result);
+  }
+
+  return results;
+}

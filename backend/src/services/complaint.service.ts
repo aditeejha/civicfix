@@ -7,6 +7,12 @@ interface CreateComplaintData {
   description?: string;
   latitude: number;
   longitude: number;
+
+  // Gemini AI results
+  title: string;
+  category: string;
+  severity: string;
+  aiConfidence: number;
 }
 
 export async function getMyComplaints(citizenId: string) {
@@ -69,7 +75,9 @@ export async function getComplaintById(
   });
 }
 
-export async function createComplaint(data: CreateComplaintData) {
+export async function createComplaint(
+  data: CreateComplaintData
+) {
   const address = await reverseGeocode(
     data.latitude,
     data.longitude
@@ -77,13 +85,14 @@ export async function createComplaint(data: CreateComplaintData) {
 
   const issue = await prisma.issue.create({
     data: {
-      title: "Civic Issue",
+      title: data.title,
       description: data.description,
-      category: "OTHER",
-      severity: "MEDIUM",
+      category: data.category as any,
+      severity: data.severity as any,
       latitude: data.latitude,
       longitude: data.longitude,
       address,
+      aiConfidence: data.aiConfidence,
       status: "REPORTED",
     },
   });

@@ -7,7 +7,7 @@ import {
   verifyComplaintResolution,
 } from "../services/complaint.service";
 import { uploadImage } from "../services/image.service";
-
+import { analyzeCivicIssue } from "../services/gemini.service";
 
 export async function createComplaintController(
   req: AuthenticatedRequest,
@@ -38,7 +38,27 @@ export async function createComplaintController(
       });
     }
 
-    const imageUrl = await uploadImage(req.file.buffer);
+    // ─────────────────────────────────────────
+    // GEMINI AI ANALYSIS
+    // ─────────────────────────────────────────
+
+    const aiResult = await analyzeCivicIssue(
+      req.file.buffer,
+      req.file.mimetype,
+      description
+    );
+
+    // ─────────────────────────────────────────
+    // IMAGE UPLOAD
+    // ─────────────────────────────────────────
+
+    const imageUrl = await uploadImage(
+      req.file.buffer
+    );
+
+    // ─────────────────────────────────────────
+    // CREATE COMPLAINT
+    // ─────────────────────────────────────────
 
     const complaint = await createComplaint({
       citizenId: req.user.userId,
@@ -46,17 +66,48 @@ export async function createComplaintController(
       description,
       latitude: Number(latitude),
       longitude: Number(longitude),
+
+      // AI-generated information
+      title: aiResult.title,
+      category: aiResult.category,
+      severity: aiResult.severity,
+      aiConfidence: aiResult.confidence,
     });
 
     return res.status(201).json({
       message: "Complaint submitted successfully",
       complaint,
+      ai: aiResult,
     });
   } catch (error) {
-    console.error("Create complaint error:", error);
+    if (error instanceof Error) {
+      if (
+        error.message ===
+        "GEMINI_API_KEY_NOT_CONFIGURED"
+      ) {
+        return res.status(500).json({
+          message: "Gemini API is not configured",
+        });
+      }
+
+      if (
+        error.message ===
+        "GEMINI_EMPTY_RESPONSE"
+      ) {
+        return res.status(502).json({
+          message: "Gemini returned an empty response",
+        });
+      }
+    }
+
+    console.error(
+      "Create complaint error:",
+      error
+    );
 
     return res.status(500).json({
-      message: "Something went wrong while creating the complaint",
+      message:
+        "Something went wrong while creating the complaint",
     });
   }
 }
@@ -72,7 +123,9 @@ export async function getMyComplaintsController(
       });
     }
 
-    const complaints = await getMyComplaints(req.user.userId);
+    const complaints = await getMyComplaints(
+      req.user.userId
+    );
 
     return res.status(200).json({
       complaints,
@@ -81,7 +134,8 @@ export async function getMyComplaintsController(
     console.error("Get complaints error:", error);
 
     return res.status(500).json({
-      message: "Something went wrong while fetching complaints",
+      message:
+        "Something went wrong while fetching complaints",
     });
   }
 }
@@ -123,7 +177,8 @@ export async function getComplaintByIdController(
     console.error("Get complaint error:", error);
 
     return res.status(500).json({
-      message: "Something went wrong while fetching the complaint",
+      message:
+        "Something went wrong while fetching the complaint",
     });
   }
 }
@@ -177,16 +232,20 @@ export async function verifyComplaintResolutionController(
 
       if (error.message === "INVALID_STATUS") {
         return res.status(409).json({
-          message: "Complaint is not ready for verification",
+          message:
+            "Complaint is not ready for verification",
         });
       }
     }
 
-    console.error("Verify complaint resolution error:", error);
+    console.error(
+      "Verify complaint resolution error:",
+      error
+    );
 
     return res.status(500).json({
-      message: "Something went wrong while verifying the resolution",
+      message:
+        "Something went wrong while verifying the resolution",
     });
   }
 }
-

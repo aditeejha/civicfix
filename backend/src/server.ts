@@ -2,12 +2,16 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { prisma } from "./lib/prisma";
+import { startSLABreachJob } from "./jobs/sla.job";
 import authRoutes from "./routes/auth.routes";
 import complaintRoutes from "./routes/complaint.routes";
 import issueRoutes from "./routes/issue.routes";
 import upvoteRoutes from "./routes/upvote.routes";
 import assignmentRoutes from "./routes/assignment.routes";
 import organizationRoutes from "./routes/organization.routes";
+import slaRoutes from "./routes/sla.routes";
+import dashboardRoutes from "./routes/dashboard.routes";
+
 import {
   authenticate,
   AuthenticatedRequest,
@@ -18,21 +22,23 @@ const PORT = 5000;
 
 app.use(cors());
 app.use(express.json());
-app.use("/api/auth", authRoutes);
-app.use("/api/complaints", complaintRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/complaints", complaintRoutes);
-app.use("/api/issues", issueRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/complaints", complaintRoutes);
-app.use("/api/issues", issueRoutes);
-app.use("/api/issues", upvoteRoutes);
+
+// ─────────────────────────────────────────────
+// API ROUTES
+// ─────────────────────────────────────────────
+
 app.use("/api/auth", authRoutes);
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/issues", issueRoutes);
 app.use("/api/issues", upvoteRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/organization", organizationRoutes);
+app.use("/api/sla", slaRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+
+// ─────────────────────────────────────────────
+// HEALTH CHECK
+// ─────────────────────────────────────────────
 
 app.get("/", (_req, res) => {
   res.json({
@@ -57,6 +63,10 @@ app.get("/api/health/db", async (_req, res) => {
     });
   }
 });
+
+// ─────────────────────────────────────────────
+// CURRENT USER
+// ─────────────────────────────────────────────
 
 app.get(
   "/api/auth/me",
@@ -95,6 +105,14 @@ app.get(
   }
 );
 
+startSLABreachJob();
+
+// ─────────────────────────────────────────────
+// START SERVER
+// ─────────────────────────────────────────────
+
 app.listen(PORT, () => {
-  console.log(`CivicFix backend running on http://localhost:${PORT}`);
+  console.log(
+    `CivicFix backend running on http://localhost:${PORT}`
+  );
 });
