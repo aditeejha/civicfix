@@ -1,8 +1,20 @@
 import { Router } from "express";
-import { getPublicIssuesController } from "../controllers/issue.controller";
+import { authenticate } from "../middleware/auth.middleware";
+import { authorizeRoles } from "../middleware/role.middleware";
+import {
+  getPublicIssuesController,
+  updateIssueStatusController,
+} from "../controllers/issue.controller";
 
 const router = Router();
 
 router.get("/", getPublicIssuesController);
+
+router.patch(
+  "/:issueId/status",
+  authenticate,
+  authorizeRoles("AUTHORITY", "ADMIN"),
+  updateIssueStatusController
+);
 
 export default router;
