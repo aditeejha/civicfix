@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma";
+import { reverseGeocode } from "./geocoding.service";
 
 interface CreateComplaintData {
   citizenId: string;
@@ -9,6 +10,11 @@ interface CreateComplaintData {
 }
 
 export async function createComplaint(data: CreateComplaintData) {
+  const address = await reverseGeocode(
+    data.latitude,
+    data.longitude
+  );
+
   const issue = await prisma.issue.create({
     data: {
       title: "Civic Issue",
@@ -17,6 +23,7 @@ export async function createComplaint(data: CreateComplaintData) {
       severity: "MEDIUM",
       latitude: data.latitude,
       longitude: data.longitude,
+      address,
       status: "REPORTED",
     },
   });
