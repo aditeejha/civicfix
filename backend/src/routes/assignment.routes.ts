@@ -5,6 +5,8 @@ import {
   createAssignmentController,
   acceptAssignmentController,
   startAssignmentController,
+  resolveAssignmentController,
+  getMyAssignmentsController,
 } from "../controllers/assignment.controller";
 
 const router = Router();
@@ -14,6 +16,13 @@ router.post(
   authenticate,
   authorizeRoles("AUTHORITY", "ADMIN"),
   createAssignmentController
+);
+
+router.get(
+  "/my",
+  authenticate,
+  authorizeRoles("AUTHORITY", "ADMIN"),
+  getMyAssignmentsController
 );
 
 router.patch(
@@ -28,6 +37,13 @@ router.patch(
   authenticate,
   authorizeRoles("AUTHORITY", "ADMIN"),
   startAssignmentController
+);
+
+router.patch(
+  "/:assignmentId/resolve",
+  authenticate,
+  authorizeRoles("AUTHORITY", "ADMIN"),
+  resolveAssignmentController
 );
 
 export default router;

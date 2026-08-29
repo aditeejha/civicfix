@@ -5,6 +5,7 @@ import {
   createComplaintController,
   getMyComplaintsController,
   getComplaintByIdController,
+  verifyComplaintResolutionController,
 } from "../controllers/complaint.controller";
 
 const router = Router();
@@ -26,6 +27,12 @@ router.get(
   "/:id",
   authenticate,
   getComplaintByIdController
+);
+
+router.patch(
+  "/:complaintId/verify",
+  authenticate,
+  verifyComplaintResolutionController
 );
 
 export default router;

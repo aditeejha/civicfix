@@ -5,6 +5,7 @@ import {
   acceptAssignment,
   startAssignment,
   resolveAssignment,
+  getMyAssignments,
 } from "../services/assignment.service";
 export async function createAssignmentController(
   req: AuthenticatedRequest,
@@ -257,6 +258,31 @@ export async function resolveAssignmentController(
 
     return res.status(500).json({
       message: "Something went wrong while resolving the issue",
+    });
+  }
+}
+
+export async function getMyAssignmentsController(
+  req: AuthenticatedRequest,
+  res: Response
+) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        message: "Authentication required",
+      });
+    }
+
+    const assignments = await getMyAssignments(req.user.userId);
+
+    return res.status(200).json({
+      assignments,
+    });
+  } catch (error) {
+    console.error("Get my assignments error:", error);
+
+    return res.status(500).json({
+      message: "Something went wrong while fetching assignments",
     });
   }
 }

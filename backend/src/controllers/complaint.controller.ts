@@ -4,6 +4,7 @@ import {
   createComplaint,
   getMyComplaints,
   getComplaintById,
+  verifyComplaintResolution,
 } from "../services/complaint.service";
 import { uploadImage } from "../services/image.service";
 
@@ -126,3 +127,66 @@ export async function getComplaintByIdController(
     });
   }
 }
+
+export async function verifyComplaintResolutionController(
+  req: AuthenticatedRequest,
+  res: Response
+) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        message: "Authentication required",
+      });
+    }
+
+    const { complaintId } = req.params;
+    const { approved, note } = req.body;
+
+    if (!complaintId) {
+      return res.status(400).json({
+        message: "Complaint ID is required",
+      });
+    }
+
+    if (typeof approved !== "boolean") {
+      return res.status(400).json({
+        message: "Approved must be true or false",
+      });
+    }
+
+    const issue = await verifyComplaintResolution(
+      complaintId,
+      req.user.userId,
+      approved,
+      note
+    );
+
+    return res.status(200).json({
+      message: approved
+        ? "Complaint resolution verified successfully"
+        : "Complaint reopened successfully",
+      issue,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "COMPLAINT_NOT_FOUND") {
+        return res.status(404).json({
+          message: "Complaint not found",
+        });
+      }
+
+      if (error.message === "INVALID_STATUS") {
+        return res.status(409).json({
+          message: "Complaint is not ready for verification",
+        });
+      }
+    }
+
+    console.error("Verify complaint resolution error:", error);
+
+    return res.status(500).json({
+      message: "Something went wrong while verifying the resolution",
+    });
+  }
+}
+

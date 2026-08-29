@@ -104,3 +104,58 @@ export async function createComplaint(data: CreateComplaintData) {
 
   return complaint;
 }
+
+export async function verifyComplaintResolution(
+  complaintId: string,
+  citizenId: string,
+  approved: boolean,
+  note?: string
+) {
+  const complaint = await prisma.complaint.findFirst({
+    where: {
+      id: complaintId,
+      citizenId,
+    },
+    include: {
+      issue: true,
+    },
+  });
+
+  if (!complaint) {
+    throw new Error("COMPLAINT_NOT_FOUND");
+  }
+
+  if (complaint.issue.status !== "RESOLVED") {
+    throw new Error("INVALID_STATUS");
+  }
+
+  const newStatus = approved ? "CLOSED" : "REOPENED";
+
+  const result = await prisma.$transaction(async (tx) => {
+    const updatedIssue = await tx.issue.update({
+      where: {
+        id: complaint.issueId,
+      },
+      data: {
+        status: newStatus,
+      },
+    });
+
+    await tx.statusHistory.create({
+      data: {
+        issueId: complaint.issueId,
+        changedBy: citizenId,
+        status: newStatus,
+        note:
+          note ??
+          (approved
+            ? "Citizen verified the resolution"
+            : "Citizen rejected the resolution"),
+      },
+    });
+
+    return updatedIssue;
+  });
+
+  return result;
+}

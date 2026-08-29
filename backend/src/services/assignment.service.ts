@@ -268,3 +268,30 @@ export async function resolveAssignment(
 
   return result;
 }
+
+export async function getMyAssignments(authorityId: string) {
+  return prisma.assignment.findMany({
+    where: {
+      authorityId,
+    },
+    include: {
+      issue: {
+        include: {
+          department: true,
+          ward: true,
+          sla: true,
+          statusHistory: {
+            orderBy: {
+              createdAt: "asc",
+            },
+          },
+        },
+      },
+      department: true,
+      ward: true,
+    },
+    orderBy: {
+      assignedAt: "desc",
+    },
+  });
+}

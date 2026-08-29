@@ -7,6 +7,7 @@ import complaintRoutes from "./routes/complaint.routes";
 import issueRoutes from "./routes/issue.routes";
 import upvoteRoutes from "./routes/upvote.routes";
 import assignmentRoutes from "./routes/assignment.routes";
+import organizationRoutes from "./routes/organization.routes";
 import {
   authenticate,
   AuthenticatedRequest,
@@ -31,6 +32,7 @@ app.use("/api/complaints", complaintRoutes);
 app.use("/api/issues", issueRoutes);
 app.use("/api/issues", upvoteRoutes);
 app.use("/api/assignments", assignmentRoutes);
+app.use("/api/organization", organizationRoutes);
 
 app.get("/", (_req, res) => {
   res.json({
