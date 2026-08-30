@@ -60,6 +60,70 @@ const classificationSchema = {
   ],
 };
 
+async function generateGeminiResponse(
+  imageBase64: string,
+  mimeType: string,
+  prompt: string
+) {
+  const maxAttempts = 3;
+
+  for (
+    let attempt = 1;
+    attempt <= maxAttempts;
+    attempt++
+  ) {
+    try {
+      return await ai.models.generateContent({
+        model: "gemini-3.7-flash",
+
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: prompt,
+              },
+              {
+                inlineData: {
+                  mimeType,
+                  data: imageBase64,
+                },
+              },
+            ],
+          },
+        ],
+
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: classificationSchema,
+        },
+      });
+    } catch (error: any) {
+      const status = error?.status;
+
+      if (
+        status !== 503 ||
+        attempt === maxAttempts
+      ) {
+        throw error;
+      }
+
+      console.log(
+        `Gemini temporarily unavailable. Retrying (${attempt}/${maxAttempts})...`
+      );
+
+      await new Promise((resolve) =>
+        setTimeout(
+          resolve,
+          attempt * 2000
+        )
+      );
+    }
+  }
+
+  throw new Error("GEMINI_REQUEST_FAILED");
+}
+
 export async function analyzeCivicIssue(
   imageBuffer: Buffer,
   mimeType: string,
@@ -100,31 +164,11 @@ ${description || "No description provided."}
 `;
 
   const response =
-    await ai.models.generateContent({
-      model: "gemini-3.7-flash",
-
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: prompt,
-            },
-            {
-              inlineData: {
-                mimeType,
-                data: imageBase64,
-              },
-            },
-          ],
-        },
-      ],
-
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: classificationSchema,
-      },
-    });
+    await generateGeminiResponse(
+      imageBase64,
+      mimeType,
+      prompt
+    );
 
   if (!response.text) {
     throw new Error(
@@ -132,7 +176,9 @@ ${description || "No description provided."}
     );
   }
 
-  const result = JSON.parse(response.text);
+  const result = JSON.parse(
+    response.text
+  );
 
   return {
     title: result.title,
