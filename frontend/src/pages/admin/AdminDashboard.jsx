@@ -34,8 +34,12 @@ export default function AdminDashboard() {
   }, []);
 
   function formatLabel(value) {
+    if (!value) {
+      return "";
+    }
+
     return value
-      ?.replace(/([A-Z])/g, " $1")
+      .replace(/([A-Z])/g, " $1")
       .replace(/^./, (char) =>
         char.toUpperCase()
       )
@@ -67,6 +71,8 @@ export default function AdminDashboard() {
 
   return (
     <div className="page">
+      {/* Header */}
+
       <div className="page-header">
         <p className="eyebrow">
           ADMINISTRATION
@@ -80,7 +86,7 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      {/* Main statistics */}
+      {/* Statistics */}
 
       <section className="stats-grid">
         <div className="stat-card">
@@ -154,7 +160,7 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      {/* Category statistics */}
+      {/* Category Statistics */}
 
       <section className="details-card">
         <p className="eyebrow">
@@ -190,7 +196,7 @@ export default function AdminDashboard() {
         )}
       </section>
 
-      {/* Severity statistics */}
+      {/* Severity Statistics */}
 
       <section className="details-card">
         <p className="eyebrow">
@@ -226,7 +232,7 @@ export default function AdminDashboard() {
         )}
       </section>
 
-      {/* Admin actions */}
+      {/* Admin Tools */}
 
       <section className="details-card">
         <p className="eyebrow">
