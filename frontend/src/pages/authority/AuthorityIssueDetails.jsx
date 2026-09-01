@@ -2,12 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../../api/axios";
 
-const STATUS_OPTIONS = [
-  "ACKNOWLEDGED",
-  "IN_PROGRESS",
-  "RESOLVED",
-];
-
 export default function AuthorityIssueDetails() {
   const { id } = useParams();
 
@@ -15,13 +9,16 @@ export default function AuthorityIssueDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [selectedStatus, setSelectedStatus] =
+  const [actionLoading, setActionLoading] =
+    useState(false);
+
+  const [actionError, setActionError] =
     useState("");
-  const [note, setNote] = useState("");
-  const [updating, setUpdating] = useState(false);
-  const [updateError, setUpdateError] =
-    useState("");
+
   const [success, setSuccess] = useState("");
+
+  const [resolveNote, setResolveNote] =
+    useState("");
 
   async function fetchIssue() {
     try {
@@ -73,51 +70,80 @@ export default function AuthorityIssueDetails() {
     );
   }
 
-  async function handleStatusUpdate(event) {
-    event.preventDefault();
+  const assignment =
+    issue?.assignments?.[0] || null;
 
-    if (!selectedStatus) {
-      setUpdateError(
-        "Please select a status."
+  async function performAssignmentAction(
+    action,
+    successMessage,
+    body
+  ) {
+    if (!assignment) {
+      setActionError(
+        "No assignment found for this issue."
       );
       return;
     }
 
-    setUpdating(true);
-    setUpdateError("");
+    setActionLoading(true);
+    setActionError("");
     setSuccess("");
 
     try {
       const response = await api.patch(
-        `/issues/${id}/status`,
-        {
-          status: selectedStatus,
-          note: note.trim() || undefined,
-        }
+        `/assignments/${assignment.id}/${action}`,
+        body
       );
 
       setSuccess(
         response.data.message ||
-          "Issue status updated successfully."
+          successMessage
       );
-
-      setNote("");
-      setSelectedStatus("");
 
       await fetchIssue();
     } catch (error) {
       console.error(
-        "Update issue status error:",
+        `${action} assignment error:`,
         error
       );
 
-      setUpdateError(
+      setActionError(
         error.response?.data?.message ||
-          "Unable to update issue status."
+          `Unable to ${action} assignment.`
       );
     } finally {
-      setUpdating(false);
+      setActionLoading(false);
     }
+  }
+
+  function handleAccept() {
+    performAssignmentAction(
+      "accept",
+      "Assignment accepted successfully."
+    );
+  }
+
+  function handleStart() {
+    performAssignmentAction(
+      "start",
+      "Work started successfully."
+    );
+  }
+
+  function handleResolve(event) {
+    event.preventDefault();
+
+    performAssignmentAction(
+      "resolve",
+      "Issue resolved successfully.",
+      {
+        note:
+          resolveNote.trim() ||
+          undefined,
+      }
+    );
+
+    setResolveNote("");
   }
 
   if (loading) {
@@ -144,11 +170,30 @@ export default function AuthorityIssueDetails() {
     );
   }
 
-  const canUpdate =
-    ![
-      "CLOSED",
-      "DUPLICATE",
-    ].includes(issue.status);
+  const isAccepted =
+    !!assignment?.acceptedAt;
+
+  const isCompleted =
+    !!assignment?.completedAt;
+
+  const issueStatus = issue.status;
+
+  const canAccept =
+    assignment &&
+    !isAccepted &&
+    !isCompleted;
+
+  const canStart =
+    assignment &&
+    isAccepted &&
+    !isCompleted &&
+    issueStatus === "ACKNOWLEDGED";
+
+  const canResolve =
+    assignment &&
+    isAccepted &&
+    !isCompleted &&
+    issueStatus === "IN_PROGRESS";
 
   return (
     <div className="page">
@@ -178,6 +223,178 @@ export default function AuthorityIssueDetails() {
         <div className="form-success">
           {success}
         </div>
+      )}
+
+      {actionError && (
+        <div className="form-error">
+          {actionError}
+        </div>
+      )}
+
+      {/* Assignment actions */}
+
+      {assignment && (
+        <section className="details-card">
+          <p className="eyebrow">
+            ASSIGNMENT
+          </p>
+
+          <h2>
+            {assignment.authority?.name ||
+              "Assigned Authority"}
+          </h2>
+
+          <p>
+            {assignment.authority?.email ||
+              ""}
+          </p>
+
+          <div className="details-grid">
+            <div>
+              <span className="detail-label">
+                Assigned
+              </span>
+
+              <strong>
+                {formatDate(
+                  assignment.assignedAt
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span className="detail-label">
+                Acceptance
+              </span>
+
+              <strong>
+                {isAccepted
+                  ? "Accepted"
+                  : "Pending"}
+              </strong>
+            </div>
+
+            {assignment.acceptedAt && (
+              <div>
+                <span className="detail-label">
+                  Accepted At
+                </span>
+
+                <strong>
+                  {formatDate(
+                    assignment.acceptedAt
+                  )}
+                </strong>
+              </div>
+            )}
+
+            {assignment.completedAt && (
+              <div>
+                <span className="detail-label">
+                  Completed At
+                </span>
+
+                <strong>
+                  {formatDate(
+                    assignment.completedAt
+                  )}
+                </strong>
+              </div>
+            )}
+          </div>
+
+          <div className="assignment-actions">
+            {canAccept && (
+              <button
+                type="button"
+                onClick={handleAccept}
+                disabled={actionLoading}
+              >
+                {actionLoading
+                  ? "Processing..."
+                  : "Accept Assignment"}
+              </button>
+            )}
+
+            {canStart && (
+              <button
+                type="button"
+                onClick={handleStart}
+                disabled={actionLoading}
+              >
+                {actionLoading
+                  ? "Starting..."
+                  : "Start Work"}
+              </button>
+            )}
+
+            {canResolve && (
+              <form
+                onSubmit={handleResolve}
+              >
+                <div className="form-group">
+                  <label htmlFor="resolve-note">
+                    Resolution Note
+                  </label>
+
+                  <textarea
+                    id="resolve-note"
+                    value={resolveNote}
+                    onChange={(event) =>
+                      setResolveNote(
+                        event.target.value
+                      )
+                    }
+                    placeholder="Describe the work completed..."
+                    rows={4}
+                    disabled={
+                      actionLoading
+                    }
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                >
+                  {actionLoading
+                    ? "Resolving..."
+                    : "Resolve Issue"}
+                </button>
+              </form>
+            )}
+
+            {!canAccept &&
+              !canStart &&
+              !canResolve &&
+              !isCompleted && (
+                <p>
+                  No assignment action is
+                  currently available.
+                </p>
+              )}
+
+            {isCompleted && (
+              <p>
+                ✓ This assignment has been
+                completed.
+              </p>
+            )}
+          </div>
+        </section>
+      )}
+
+      {!assignment && (
+        <section className="details-card">
+          <p className="eyebrow">
+            ASSIGNMENT
+          </p>
+
+          <p>
+            This issue has not been assigned
+            yet.
+          </p>
+        </section>
       )}
 
       {/* Issue information */}
@@ -358,52 +575,6 @@ export default function AuthorityIssueDetails() {
         </section>
       )}
 
-      {/* Assignments */}
-
-      {issue.assignments?.length > 0 && (
-        <section className="details-card">
-          <p className="eyebrow">
-            ASSIGNMENTS
-          </p>
-
-          {issue.assignments.map(
-            (assignment) => (
-              <div
-                key={assignment.id}
-                className="assignment-item"
-              >
-                <h3>
-                  {assignment.authority
-                    ?.name ||
-                    "Authority"}
-                </h3>
-
-                <p>
-                  {assignment.authority
-                    ?.email || ""}
-                </p>
-
-                <p>
-                  Assigned:{" "}
-                  {formatDate(
-                    assignment.assignedAt
-                  )}
-                </p>
-
-                {assignment.acceptedAt && (
-                  <p>
-                    Accepted:{" "}
-                    {formatDate(
-                      assignment.acceptedAt
-                    )}
-                  </p>
-                )}
-              </div>
-            )
-          )}
-        </section>
-      )}
-
       {/* Status timeline */}
 
       <section className="details-card">
@@ -460,90 +631,6 @@ export default function AuthorityIssueDetails() {
           </p>
         )}
       </section>
-
-      {/* Status update */}
-
-      {canUpdate && (
-        <section className="details-card">
-          <p className="eyebrow">
-            UPDATE ISSUE
-          </p>
-
-          <h2>
-            Change Issue Status
-          </h2>
-
-          <form
-            onSubmit={handleStatusUpdate}
-          >
-            <div className="form-group">
-              <label htmlFor="status">
-                New Status
-              </label>
-
-              <select
-                id="status"
-                value={selectedStatus}
-                onChange={(event) =>
-                  setSelectedStatus(
-                    event.target.value
-                  )
-                }
-                disabled={updating}
-              >
-                <option value="">
-                  Select status
-                </option>
-
-                {STATUS_OPTIONS.map(
-                  (status) => (
-                    <option
-                      key={status}
-                      value={status}
-                    >
-                      {formatStatus(status)}
-                    </option>
-                  )
-                )}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="note">
-                Note
-              </label>
-
-              <textarea
-                id="note"
-                value={note}
-                onChange={(event) =>
-                  setNote(
-                    event.target.value
-                  )
-                }
-                placeholder="Add an optional note about this status update..."
-                rows={4}
-                disabled={updating}
-              />
-            </div>
-
-            {updateError && (
-              <div className="form-error">
-                {updateError}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={updating}
-            >
-              {updating
-                ? "Updating..."
-                : "Update Status"}
-            </button>
-          </form>
-        </section>
-      )}
     </div>
   );
 }
