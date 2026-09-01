@@ -26,39 +26,83 @@ export async function createComplaintController(
       });
     }
 
+    console.log("STEP 1: Request validated");
+
     const {
       description,
       latitude,
       longitude,
     } = req.body;
 
-    if (latitude === undefined || longitude === undefined) {
+    if (
+      latitude === undefined ||
+      longitude === undefined
+    ) {
       return res.status(400).json({
-        message: "Latitude and longitude are required",
+        message:
+          "Latitude and longitude are required",
       });
     }
-
-    // ─────────────────────────────────────────
-    // GEMINI AI ANALYSIS
-    // ─────────────────────────────────────────
-
-    const aiResult = await analyzeCivicIssue(
-      req.file.buffer,
-      req.file.mimetype,
-      description
-    );
 
     // ─────────────────────────────────────────
     // IMAGE UPLOAD
     // ─────────────────────────────────────────
 
+    console.log("STEP 2: Uploading image");
+
     const imageUrl = await uploadImage(
       req.file.buffer
+    );
+
+    console.log(
+      "STEP 3: Image uploaded:",
+      imageUrl
+    );
+
+    // ─────────────────────────────────────────
+    // GEMINI AI ANALYSIS
+    // ─────────────────────────────────────────
+
+    console.log(
+      "STEP 4: Starting Gemini analysis"
+    );
+
+    let aiResult = {
+      title: "Civic Issue",
+      category: "OTHER",
+      severity: "MEDIUM",
+      confidence: 0,
+    };
+
+    try {
+      aiResult = await analyzeCivicIssue(
+        req.file.buffer,
+        req.file.mimetype,
+        description
+      );
+
+      console.log(
+        "Gemini analysis successful:",
+        aiResult
+      );
+    } catch (error) {
+      console.error(
+        "Gemini analysis failed. Using fallback classification:",
+        error
+      );
+    }
+
+    console.log(
+      "STEP 5: Gemini finished"
     );
 
     // ─────────────────────────────────────────
     // CREATE COMPLAINT
     // ─────────────────────────────────────────
+
+    console.log(
+      "STEP 6: Creating complaint in database"
+    );
 
     const complaint = await createComplaint({
       citizenId: req.user.userId,
@@ -67,42 +111,44 @@ export async function createComplaintController(
       latitude: Number(latitude),
       longitude: Number(longitude),
 
-      // AI-generated information
       title: aiResult.title,
       category: aiResult.category,
       severity: aiResult.severity,
       aiConfidence: aiResult.confidence,
     });
 
+    console.log(
+      "STEP 7: Complaint created:",
+      complaint.id
+    );
+
     return res.status(201).json({
-      message: "Complaint submitted successfully",
+      message:
+        "Complaint submitted successfully",
       complaint,
       ai: aiResult,
     });
   } catch (error) {
-    if (error instanceof Error) {
-      if (
-        error.message ===
-        "GEMINI_API_KEY_NOT_CONFIGURED"
-      ) {
-        return res.status(500).json({
-          message: "Gemini API is not configured",
-        });
-      }
+    console.error(
+      "========== CREATE COMPLAINT FAILED =========="
+    );
 
-      if (
-        error.message ===
-        "GEMINI_EMPTY_RESPONSE"
-      ) {
-        return res.status(502).json({
-          message: "Gemini returned an empty response",
-        });
-      }
+    console.error(error);
+
+    if (error instanceof Error) {
+      console.error(
+        "Message:",
+        error.message
+      );
+
+      console.error(
+        "Stack:",
+        error.stack
+      );
     }
 
     console.error(
-      "Create complaint error:",
-      error
+      "=============================================="
     );
 
     return res.status(500).json({
@@ -131,7 +177,10 @@ export async function getMyComplaintsController(
       complaints,
     });
   } catch (error) {
-    console.error("Get complaints error:", error);
+    console.error(
+      "Get complaints error:",
+      error
+    );
 
     return res.status(500).json({
       message:
@@ -174,7 +223,10 @@ export async function getComplaintByIdController(
       complaint,
     });
   } catch (error) {
-    console.error("Get complaint error:", error);
+    console.error(
+      "Get complaint error:",
+      error
+    );
 
     return res.status(500).json({
       message:
@@ -205,7 +257,8 @@ export async function verifyComplaintResolutionController(
 
     if (typeof approved !== "boolean") {
       return res.status(400).json({
-        message: "Approved must be true or false",
+        message:
+          "Approved must be true or false",
       });
     }
 
@@ -224,13 +277,19 @@ export async function verifyComplaintResolutionController(
     });
   } catch (error) {
     if (error instanceof Error) {
-      if (error.message === "COMPLAINT_NOT_FOUND") {
+      if (
+        error.message ===
+        "COMPLAINT_NOT_FOUND"
+      ) {
         return res.status(404).json({
           message: "Complaint not found",
         });
       }
 
-      if (error.message === "INVALID_STATUS") {
+      if (
+        error.message ===
+        "INVALID_STATUS"
+      ) {
         return res.status(409).json({
           message:
             "Complaint is not ready for verification",
