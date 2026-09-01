@@ -1,6 +1,10 @@
 import { prisma } from "../lib/prisma";
 import { IssueStatus } from "../generated/prisma/client";
 
+// ─────────────────────────────────────────────
+// PUBLIC ISSUES
+// ─────────────────────────────────────────────
+
 export async function getPublicIssues() {
   return prisma.issue.findMany({
     where: {
@@ -44,6 +48,52 @@ export async function getPublicIssues() {
   });
 }
 
+// ─────────────────────────────────────────────
+// ADMIN — ALL ISSUES
+// ─────────────────────────────────────────────
+
+export async function getAllIssues() {
+  return prisma.issue.findMany({
+    include: {
+      department: true,
+      ward: true,
+      sla: true,
+      statusHistory: {
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
+      assignments: {
+        include: {
+          authority: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+          department: true,
+          ward: true,
+        },
+      },
+      _count: {
+        select: {
+          upvotes: true,
+          complaints: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+// ─────────────────────────────────────────────
+// ISSUE BY ID
+// ─────────────────────────────────────────────
+
 export async function getIssueById(
   issueId: string
 ) {
@@ -83,6 +133,10 @@ export async function getIssueById(
     },
   });
 }
+
+// ─────────────────────────────────────────────
+// UPDATE ISSUE STATUS
+// ─────────────────────────────────────────────
 
 export async function updateIssueStatus(
   issueId: string,

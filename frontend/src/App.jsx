@@ -7,16 +7,15 @@ import {
 } from "react-router-dom";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 
 import CitizenDashboard from "./pages/citizen/CitizenDashboard";
 import ReportIssue from "./pages/citizen/ReportIssue";
 import MyComplaints from "./pages/citizen/MyComplaints";
-import ComplaintDetails from "./pages/citizen/ComplaintDetails";
 
-import AuthorityDashboard from "./pages/authority/AuthorityDashboard";
-import AuthorityIssueDetails from "./pages/authority/AuthorityIssueDetails";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 function Home() {
   return (
@@ -44,10 +43,10 @@ function Home() {
   );
 }
 
-function AdminDashboard() {
+function AuthorityDashboard() {
   return (
     <div className="page">
-      <h1>Admin Dashboard</h1>
+      <h1>Authority Dashboard</h1>
     </div>
   );
 }
@@ -56,7 +55,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes */}
+        {/* ─────────────────────────────────────
+            PUBLIC ROUTES
+        ───────────────────────────────────── */}
 
         <Route
           path="/"
@@ -73,7 +74,9 @@ export default function App() {
           element={<Register />}
         />
 
-        {/* Citizen routes */}
+        {/* ─────────────────────────────────────
+            CITIZEN ROUTES
+        ───────────────────────────────────── */}
 
         <Route
           element={
@@ -96,14 +99,11 @@ export default function App() {
             path="/citizen/complaints"
             element={<MyComplaints />}
           />
-
-          <Route
-            path="/citizen/complaints/:id"
-            element={<ComplaintDetails />}
-          />
         </Route>
 
-        {/* Authority routes */}
+        {/* ─────────────────────────────────────
+            AUTHORITY ROUTES
+        ───────────────────────────────────── */}
 
         <Route
           element={
@@ -119,16 +119,11 @@ export default function App() {
             path="/authority"
             element={<AuthorityDashboard />}
           />
-
-          <Route
-            path="/authority/issues/:id"
-            element={
-              <AuthorityIssueDetails />
-            }
-          />
         </Route>
 
-        {/* Admin routes */}
+        {/* ─────────────────────────────────────
+            ADMIN ROUTES
+        ───────────────────────────────────── */}
 
         <Route
           element={
@@ -143,7 +138,9 @@ export default function App() {
           />
         </Route>
 
-        {/* Unknown routes */}
+        {/* ─────────────────────────────────────
+            UNKNOWN ROUTES
+        ───────────────────────────────────── */}
 
         <Route
           path="*"
