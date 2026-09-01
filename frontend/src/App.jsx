@@ -16,6 +16,7 @@ import ReportIssue from "./pages/citizen/ReportIssue";
 import MyComplaints from "./pages/citizen/MyComplaints";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminIssues from "./pages/admin/AdminIssues";
 
 function Home() {
   return (
@@ -117,7 +118,9 @@ export default function App() {
         >
           <Route
             path="/authority"
-            element={<AuthorityDashboard />}
+            element={
+              <AuthorityDashboard />
+            }
           />
         </Route>
 
@@ -135,6 +138,11 @@ export default function App() {
           <Route
             path="/admin"
             element={<AdminDashboard />}
+          />
+
+          <Route
+            path="/admin/issues"
+            element={<AdminIssues />}
           />
         </Route>
 
