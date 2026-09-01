@@ -4,6 +4,7 @@ import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import {
   getPublicIssues,
   getIssueById,
+  getAllIssues,
   updateIssueStatus,
 } from "../services/issue.service";
 
@@ -26,6 +27,35 @@ export async function getPublicIssuesController(
     return res.status(500).json({
       message:
         "Something went wrong while fetching issues",
+    });
+  }
+}
+
+export async function getAllIssuesController(
+  req: AuthenticatedRequest,
+  res: Response
+) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        message: "Authentication required",
+      });
+    }
+
+    const issues = await getAllIssues();
+
+    return res.status(200).json({
+      issues,
+    });
+  } catch (error) {
+    console.error(
+      "Get all issues error:",
+      error
+    );
+
+    return res.status(500).json({
+      message:
+        "Something went wrong while fetching all issues",
     });
   }
 }
