@@ -16,6 +16,7 @@ import MyComplaints from "./pages/citizen/MyComplaints";
 import ComplaintDetails from "./pages/citizen/ComplaintDetails";
 
 import AuthorityDashboard from "./pages/authority/AuthorityDashboard";
+import AuthorityIssueDetails from "./pages/authority/AuthorityIssueDetails";
 
 function Home() {
   return (
@@ -117,6 +118,13 @@ export default function App() {
           <Route
             path="/authority"
             element={<AuthorityDashboard />}
+          />
+
+          <Route
+            path="/authority/issues/:id"
+            element={
+              <AuthorityIssueDetails />
+            }
           />
         </Route>
 

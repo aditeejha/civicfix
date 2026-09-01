@@ -3,6 +3,7 @@ import { IssueStatus } from "../generated/prisma/client";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import {
   getPublicIssues,
+  getIssueById,
   updateIssueStatus,
 } from "../services/issue.service";
 
@@ -17,10 +18,53 @@ export async function getPublicIssuesController(
       issues,
     });
   } catch (error) {
-    console.error("Get public issues error:", error);
+    console.error(
+      "Get public issues error:",
+      error
+    );
 
     return res.status(500).json({
-      message: "Something went wrong while fetching issues",
+      message:
+        "Something went wrong while fetching issues",
+    });
+  }
+}
+
+export async function getIssueByIdController(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { issueId } = req.params;
+
+    if (!issueId) {
+      return res.status(400).json({
+        message: "Issue ID is required",
+      });
+    }
+
+    const issue = await getIssueById(
+      issueId
+    );
+
+    if (!issue) {
+      return res.status(404).json({
+        message: "Issue not found",
+      });
+    }
+
+    return res.status(200).json({
+      issue,
+    });
+  } catch (error) {
+    console.error(
+      "Get issue error:",
+      error
+    );
+
+    return res.status(500).json({
+      message:
+        "Something went wrong while fetching the issue",
     });
   }
 }
@@ -45,7 +89,12 @@ export async function updateIssueStatusController(
       });
     }
 
-    if (!status || !Object.values(IssueStatus).includes(status)) {
+    if (
+      !status ||
+      !Object.values(IssueStatus).includes(
+        status
+      )
+    ) {
       return res.status(400).json({
         message: "Invalid issue status",
       });
@@ -59,20 +108,28 @@ export async function updateIssueStatusController(
     );
 
     return res.status(200).json({
-      message: "Issue status updated successfully",
+      message:
+        "Issue status updated successfully",
       issue,
     });
   } catch (error) {
-    if (error instanceof Error && error.message === "ISSUE_NOT_FOUND") {
+    if (
+      error instanceof Error &&
+      error.message === "ISSUE_NOT_FOUND"
+    ) {
       return res.status(404).json({
         message: "Issue not found",
       });
     }
 
-    console.error("Update issue status error:", error);
+    console.error(
+      "Update issue status error:",
+      error
+    );
 
     return res.status(500).json({
-      message: "Something went wrong while updating the issue status",
+      message:
+        "Something went wrong while updating the issue status",
     });
   }
 }

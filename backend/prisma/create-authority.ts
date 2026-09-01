@@ -1,7 +1,5 @@
 import bcrypt from "bcryptjs";
-import { PrismaClient } from "../src/generated/prisma";
-
-const prisma = new PrismaClient();
+import { prisma } from "../src/lib/prisma";
 
 async function main() {
   const email = "authority@civicfix.test";
@@ -32,7 +30,9 @@ async function main() {
       },
     });
 
-    console.log("Authority account ready:");
+    console.log(
+      "Authority account ready:"
+    );
     console.log(user);
 
     return;
@@ -53,7 +53,9 @@ async function main() {
     },
   });
 
-  console.log("Authority account created:");
+  console.log(
+    "Authority account created:"
+  );
   console.log(user);
 }
 

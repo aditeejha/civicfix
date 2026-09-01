@@ -3,34 +3,33 @@ import { Link } from "react-router-dom";
 import api from "../../api/axios";
 
 export default function AuthorityDashboard() {
-  const [issues, setIssues] = useState([]);
+  const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function fetchIssues() {
+    async function fetchAssignments() {
       try {
-        const response = await api.get("/issues");
+        const response = await api.get(
+          "/assignments/my"
+        );
 
-        setIssues(
-          response.data.issues || []
+        setAssignments(
+          response.data.assignments || []
         );
       } catch (error) {
-        console.error(
-          "Fetch authority issues error:",
-          error
-        );
+        console.error(error);
 
         setError(
           error.response?.data?.message ||
-            "Unable to load issues."
+            "Unable to load assignments."
         );
       } finally {
         setLoading(false);
       }
     }
 
-    fetchIssues();
+    fetchAssignments();
   }, []);
 
   function formatStatus(status) {
@@ -53,11 +52,26 @@ export default function AuthorityDashboard() {
     );
   }
 
+  const pending = assignments.filter(
+    (a) => !a.acceptedAt
+  ).length;
+
+  const active = assignments.filter(
+    (a) =>
+      a.issue?.status === "ACKNOWLEDGED" ||
+      a.issue?.status === "IN_PROGRESS"
+  ).length;
+
+  const resolved = assignments.filter(
+    (a) =>
+      a.issue?.status === "RESOLVED"
+  ).length;
+
   if (loading) {
     return (
       <div className="page">
         <h1>Authority Dashboard</h1>
-        <p>Loading issues...</p>
+        <p>Loading assignments...</p>
       </div>
     );
   }
@@ -68,9 +82,30 @@ export default function AuthorityDashboard() {
         <h1>Authority Dashboard</h1>
 
         <p>
-          Manage and resolve civic issues
-          reported by citizens.
+          Manage your assigned civic issues.
         </p>
+      </div>
+
+      <div className="stats-grid">
+        <div className="stat-card">
+          <h2>{assignments.length}</h2>
+          <p>Total Assigned</p>
+        </div>
+
+        <div className="stat-card">
+          <h2>{pending}</h2>
+          <p>Pending Acceptance</p>
+        </div>
+
+        <div className="stat-card">
+          <h2>{active}</h2>
+          <p>Active Issues</p>
+        </div>
+
+        <div className="stat-card">
+          <h2>{resolved}</h2>
+          <p>Resolved</p>
+        </div>
       </div>
 
       {error && (
@@ -79,79 +114,92 @@ export default function AuthorityDashboard() {
         </div>
       )}
 
-      {!error && issues.length === 0 && (
-        <div className="empty-state">
-          <h2>No issues found</h2>
+      {!error &&
+        assignments.length === 0 && (
+          <div className="empty-state">
+            <h2>
+              No assignments yet
+            </h2>
 
-          <p>
-            There are currently no issues
-            available for your authority account.
-          </p>
-        </div>
-      )}
+            <p>
+              Issues assigned to you will
+              appear here.
+            </p>
+          </div>
+        )}
 
-      {issues.length > 0 && (
+      {assignments.length > 0 && (
         <div className="complaints-list">
-          {issues.map((issue) => (
-            <Link
-              key={issue.id}
-              to={`/authority/issues/${issue.id}`}
-              className="complaint-card"
-            >
-              <div className="complaint-card-header">
-                <div>
-                  <h2>
-                    {issue.title ||
-                      "Civic Issue"}
-                  </h2>
+          {assignments.map(
+            (assignment) => (
+              <Link
+                key={assignment.id}
+                to={`/authority/issues/${assignment.issue.id}`}
+                className="complaint-card"
+              >
+                <div className="complaint-card-header">
+                  <div>
+                    <h2>
+                      {assignment.issue.title}
+                    </h2>
 
-                  <p>
+                    <p>
+                      {formatStatus(
+                        assignment.issue
+                          .category
+                      )}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`status-badge status-${assignment.issue.status
+                      .toLowerCase()
+                      .replace(
+                        /_/g,
+                        "-"
+                      )}`}
+                  >
                     {formatStatus(
-                      issue.category ||
-                        "OTHER"
+                      assignment.issue
+                        .status
                     )}
-                  </p>
+                  </span>
                 </div>
 
-                <span
-                  className={`status-badge status-${issue.status
-                    ?.toLowerCase()
-                    .replace(/_/g, "-")}`}
-                >
-                  {formatStatus(
-                    issue.status
-                  )}
-                </span>
-              </div>
-
-              <p className="complaint-description">
-                {issue.description ||
-                  "No description provided."}
-              </p>
-
-              <div className="complaint-meta">
-                <span>
-                  Severity:{" "}
-                  {formatStatus(
-                    issue.severity ||
-                      "MEDIUM"
-                  )}
-                </span>
-
-                <span>
-                  {formatDate(
-                    issue.createdAt
-                  )}
-                </span>
-              </div>
-
-              {issue.address && (
-                <p className="complaint-address">
-                  📍 {issue.address}
+                <p className="complaint-description">
+                  {assignment.issue
+                    .description ||
+                    "No description"}
                 </p>
-              )}
-            </Link>
-          ))}
+
+                <div className="complaint-meta">
+                  <span>
+                    Assigned{" "}
+                    {formatDate(
+                      assignment.assignedAt
+                    )}
+                  </span>
+
+                  <span>
+                    {assignment.acceptedAt
+                      ? "Accepted"
+                      : "Pending"}
+                  </span>
+                </div>
+
+                {assignment.issue
+                  .address && (
+                  <p className="complaint-address">
+                    📍{" "}
+                    {
+                      assignment.issue
+                        .address
+                    }
+                  </p>
+                )}
+              </Link>
+            )
+          )}
         </div>
       )}
     </div>

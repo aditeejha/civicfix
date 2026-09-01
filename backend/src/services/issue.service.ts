@@ -12,6 +12,25 @@ export async function getPublicIssues() {
       department: true,
       ward: true,
       sla: true,
+      statusHistory: {
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
+      assignments: {
+        include: {
+          authority: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+          department: true,
+          ward: true,
+        },
+      },
       _count: {
         select: {
           upvotes: true,
@@ -21,6 +40,46 @@ export async function getPublicIssues() {
     },
     orderBy: {
       createdAt: "desc",
+    },
+  });
+}
+
+export async function getIssueById(
+  issueId: string
+) {
+  return prisma.issue.findUnique({
+    where: {
+      id: issueId,
+    },
+    include: {
+      department: true,
+      ward: true,
+      sla: true,
+      statusHistory: {
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
+      assignments: {
+        include: {
+          authority: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+          department: true,
+          ward: true,
+        },
+      },
+      _count: {
+        select: {
+          upvotes: true,
+          complaints: true,
+        },
+      },
     },
   });
 }
@@ -41,27 +100,30 @@ export async function updateIssueStatus(
     throw new Error("ISSUE_NOT_FOUND");
   }
 
-  const result = await prisma.$transaction(async (tx) => {
-    const updatedIssue = await tx.issue.update({
-      where: {
-        id: issueId,
-      },
-      data: {
-        status,
-      },
-    });
+  const result = await prisma.$transaction(
+    async (tx) => {
+      const updatedIssue =
+        await tx.issue.update({
+          where: {
+            id: issueId,
+          },
+          data: {
+            status,
+          },
+        });
 
-    await tx.statusHistory.create({
-      data: {
-        issueId,
-        changedBy: userId,
-        status,
-        note,
-      },
-    });
+      await tx.statusHistory.create({
+        data: {
+          issueId,
+          changedBy: userId,
+          status,
+          note,
+        },
+      });
 
-    return updatedIssue;
-  });
+      return updatedIssue;
+    }
+  );
 
   return result;
 }
