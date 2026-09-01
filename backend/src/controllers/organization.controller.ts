@@ -4,6 +4,7 @@ import {
   getDepartments,
   createWard,
   getWards,
+  getAuthorities,
 } from "../services/organization.service";
 
 // ─────────────────────────────────────────────
@@ -131,6 +132,30 @@ export async function getWardsController(
 
     return res.status(500).json({
       message: "Something went wrong while fetching wards",
+    });
+  }
+}
+
+export async function getAuthoritiesController(
+  _req: Request,
+  res: Response
+) {
+  try {
+    const authorities =
+      await getAuthorities();
+
+    return res.status(200).json({
+      authorities,
+    });
+  } catch (error) {
+    console.error(
+      "Get authorities error:",
+      error
+    );
+
+    return res.status(500).json({
+      message:
+        "Something went wrong while fetching authorities",
     });
   }
 }

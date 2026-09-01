@@ -1,16 +1,21 @@
 import { Router } from "express";
+
 import { authenticate } from "../middleware/auth.middleware";
 import { authorizeRoles } from "../middleware/role.middleware";
+
 import {
   createDepartmentController,
   getDepartmentsController,
   createWardController,
   getWardsController,
+  getAuthoritiesController,
 } from "../controllers/organization.controller";
 
 const router = Router();
 
-// Departments
+// ─────────────────────────────────────────────
+// DEPARTMENTS
+// ─────────────────────────────────────────────
 
 router.post(
   "/departments",
@@ -26,7 +31,9 @@ router.get(
   getDepartmentsController
 );
 
-// Wards
+// ─────────────────────────────────────────────
+// WARDS
+// ─────────────────────────────────────────────
 
 router.post(
   "/wards",
@@ -40,6 +47,17 @@ router.get(
   authenticate,
   authorizeRoles("ADMIN", "AUTHORITY"),
   getWardsController
+);
+
+// ─────────────────────────────────────────────
+// AUTHORITIES
+// ─────────────────────────────────────────────
+
+router.get(
+  "/authorities",
+  authenticate,
+  authorizeRoles("ADMIN"),
+  getAuthoritiesController
 );
 
 export default router;
