@@ -22,6 +22,7 @@ import AuthorityIssueDetails from "./pages/authority/AuthorityIssueDetails";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminIssues from "./pages/admin/AdminIssues";
 import AdminOrganization from "./pages/admin/AdminOrganization";
+import AdminSLA from "./pages/admin/AdminSLA";
 
 function Home() {
   return (
@@ -34,15 +35,11 @@ function Home() {
 
       <div>
         <Link to="/login">
-          <button type="button">
-            Login
-          </button>
+          <button type="button">Login</button>
         </Link>
 
         <Link to="/register">
-          <button type="button">
-            Register
-          </button>
+          <button type="button">Register</button>
         </Link>
       </div>
     </div>
@@ -53,10 +50,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* ─────────────────────────────────────
-            PUBLIC ROUTES
-        ───────────────────────────────────── */}
-
+        {/* PUBLIC */}
         <Route
           path="/"
           element={<Home />}
@@ -72,10 +66,7 @@ export default function App() {
           element={<Register />}
         />
 
-        {/* ─────────────────────────────────────
-            CITIZEN ROUTES
-        ───────────────────────────────────── */}
-
+        {/* CITIZEN */}
         <Route
           element={
             <ProtectedRoute
@@ -104,10 +95,7 @@ export default function App() {
           />
         </Route>
 
-        {/* ─────────────────────────────────────
-            AUTHORITY ROUTES
-        ───────────────────────────────────── */}
-
+        {/* AUTHORITY */}
         <Route
           element={
             <ProtectedRoute
@@ -129,10 +117,7 @@ export default function App() {
           />
         </Route>
 
-        {/* ─────────────────────────────────────
-            ADMIN ROUTES
-        ───────────────────────────────────── */}
-
+        {/* ADMIN */}
         <Route
           element={
             <ProtectedRoute
@@ -154,20 +139,17 @@ export default function App() {
             path="/admin/organization"
             element={<AdminOrganization />}
           />
+
+          <Route
+            path="/admin/sla"
+            element={<AdminSLA />}
+          />
         </Route>
 
-        {/* ─────────────────────────────────────
-            UNKNOWN ROUTES
-        ───────────────────────────────────── */}
-
+        {/* FALLBACK */}
         <Route
           path="*"
-          element={
-            <Navigate
-              to="/"
-              replace
-            />
-          }
+          element={<Navigate to="/" replace />}
         />
       </Routes>
     </BrowserRouter>
