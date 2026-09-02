@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { reverseGeocode } from "./geocoding.service";
+import { createNotification } from "./notification.service";
 
 interface CreateComplaintData {
   citizenId: string;
@@ -126,7 +127,25 @@ export async function verifyComplaintResolution(
       citizenId,
     },
     include: {
-      issue: true,
+      issue: {
+        include: {
+          assignments: {
+            orderBy: {
+              assignedAt: "desc",
+            },
+            include: {
+              authority: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  role: true,
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
 
@@ -140,31 +159,68 @@ export async function verifyComplaintResolution(
 
   const newStatus = approved ? "CLOSED" : "REOPENED";
 
-  const result = await prisma.$transaction(async (tx) => {
-    const updatedIssue = await tx.issue.update({
-      where: {
-        id: complaint.issueId,
-      },
-      data: {
-        status: newStatus,
-      },
-    });
+  const result = await prisma.$transaction(
+    async (tx) => {
+      const updatedIssue = await tx.issue.update({
+        where: {
+          id: complaint.issueId,
+        },
+        data: {
+          status: newStatus,
+        },
+      });
 
-    await tx.statusHistory.create({
-      data: {
-        issueId: complaint.issueId,
-        changedBy: citizenId,
-        status: newStatus,
-        note:
-          note ??
-          (approved
-            ? "Citizen verified the resolution"
-            : "Citizen rejected the resolution"),
-      },
-    });
+      await tx.statusHistory.create({
+        data: {
+          issueId: complaint.issueId,
+          changedBy: citizenId,
+          status: newStatus,
+          note:
+            note ??
+            (approved
+              ? "Citizen verified the resolution"
+              : "Citizen rejected the resolution"),
+        },
+      });
 
-    return updatedIssue;
-  });
+      // When the citizen rejects the resolution,
+      // reactivate the most recent assignment so
+      // the authority can continue working on the issue.
+      if (!approved) {
+        const assignment = complaint.issue.assignments[0];
+
+        if (assignment) {
+          await tx.assignment.update({
+            where: {
+              id: assignment.id,
+            },
+            data: {
+              acceptedAt: null,
+              completedAt: null,
+              assignedAt: new Date(),
+            },
+          });
+        }
+      }
+
+      return updatedIssue;
+    }
+  );
+
+  // Notify the authority when the citizen reopens the issue.
+  if (!approved) {
+    const assignment = complaint.issue.assignments[0];
+
+    if (assignment) {
+      await createNotification(
+        assignment.authority.id,
+        "Issue Reopened",
+        `The citizen has rejected the resolution of "${complaint.issue.title}" and reopened the issue.${
+          note ? ` Reason: ${note}` : ""
+        }`
+      );
+    }
+  }
 
   return result;
 }

@@ -261,7 +261,10 @@ export async function startAssignment(
     throw new Error("ASSIGNMENT_NOT_ACCEPTED");
   }
 
-  if (assignment.issue.status !== "ACKNOWLEDGED") {
+  if (
+    assignment.issue.status !== "ACKNOWLEDGED" &&
+    assignment.issue.status !== "REOPENED"
+  ) {
     throw new Error("INVALID_STATUS");
   }
 
@@ -282,7 +285,10 @@ export async function startAssignment(
           issueId: assignment.issueId,
           changedBy: authorityId,
           status: "IN_PROGRESS",
-          note: "Authority started working on the issue",
+          note:
+            assignment.issue.status === "REOPENED"
+              ? "Authority resumed work after citizen reopened the issue"
+              : "Authority started working on the issue",
         },
       });
 
