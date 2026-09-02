@@ -1406,3 +1406,215 @@ textarea:focus {
     width: 100%;
   }
 }
+
+/* =========================================================
+   AUTHORITY ISSUE DETAILS
+========================================================= */
+
+.issue-detail-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.issue-detail-title-row > div {
+  min-width: 0;
+}
+
+.issue-detail-title-row .status-badge {
+  margin-top: 8px;
+}
+
+/* Assignment */
+
+.assignment-card {
+  border-color: #dbe4ff;
+  background:
+    linear-gradient(
+      180deg,
+      #fbfcff 0%,
+      #ffffff 100%
+    );
+}
+
+.assignment-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.assignment-header h2 {
+  margin: 0 0 4px;
+}
+
+.assignment-header p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.workflow-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.workflow-pending {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.workflow-active {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.workflow-complete {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.assignment-actions {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+
+.workflow-primary-button {
+  background: var(--primary) !important;
+  color: white !important;
+}
+
+.workflow-primary-button:hover:not(:disabled) {
+  background: var(--primary-dark) !important;
+}
+
+.workflow-success-button {
+  background: var(--success) !important;
+  color: white !important;
+}
+
+.workflow-success-button:hover:not(:disabled) {
+  background: #05603a !important;
+}
+
+.resolve-form {
+  max-width: 650px;
+}
+
+.resolve-form .form-group {
+  margin-bottom: 14px;
+}
+
+.workflow-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 15px 17px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.workflow-info strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.workflow-info p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.workflow-complete-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 17px;
+  background: var(--success-soft);
+  border: 1px solid #abefc6;
+  border-radius: var(--radius-md);
+}
+
+.workflow-complete-message > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  flex: 0 0 27px;
+  border-radius: 50%;
+  background: var(--success);
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.workflow-complete-message strong {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--success);
+  font-size: 14px;
+}
+
+.workflow-complete-message p {
+  margin: 0;
+  color: #475467;
+  font-size: 13px;
+}
+
+/* Organization */
+
+.organization-highlight {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 17px 18px;
+  background: var(--surface-soft);
+  border: 1px solid #edf0f4;
+  border-radius: var(--radius-md);
+}
+
+.organization-highlight strong {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.organization-highlight span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .issue-detail-title-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .issue-detail-title-row .status-badge {
+    margin-top: 0;
+  }
+
+  .assignment-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .organization-highlight {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+}
