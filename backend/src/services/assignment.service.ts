@@ -144,7 +144,15 @@ export async function acceptAssignment(
       id: assignmentId,
     },
     include: {
-      issue: true,
+      issue: {
+        include: {
+          complaints: {
+            select: {
+              citizenId: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -203,6 +211,16 @@ export async function acceptAssignment(
         },
       });
 
+      for (const complaint of assignment.issue.complaints) {
+        await tx.notification.create({
+          data: {
+            userId: complaint.citizenId,
+            title: "Issue Acknowledged",
+            message: `Your civic issue "${assignment.issue.title}" has been acknowledged by the assigned authority.`,
+          },
+        });
+      }
+
       return updatedAssignment;
     }
   );
@@ -219,7 +237,15 @@ export async function startAssignment(
       id: assignmentId,
     },
     include: {
-      issue: true,
+      issue: {
+        include: {
+          complaints: {
+            select: {
+              citizenId: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -260,6 +286,16 @@ export async function startAssignment(
         },
       });
 
+      for (const complaint of assignment.issue.complaints) {
+        await tx.notification.create({
+          data: {
+            userId: complaint.citizenId,
+            title: "Work Started",
+            message: `Work has started on your civic issue "${assignment.issue.title}".`,
+          },
+        });
+      }
+
       return updatedIssue;
     }
   );
@@ -277,7 +313,15 @@ export async function resolveAssignment(
       id: assignmentId,
     },
     include: {
-      issue: true,
+      issue: {
+        include: {
+          complaints: {
+            select: {
+              citizenId: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -328,6 +372,16 @@ export async function resolveAssignment(
             "Authority resolved the issue",
         },
       });
+
+      for (const complaint of assignment.issue.complaints) {
+        await tx.notification.create({
+          data: {
+            userId: complaint.citizenId,
+            title: "Issue Resolved",
+            message: `Your civic issue "${assignment.issue.title}" has been marked as resolved. Please verify whether the issue has actually been fixed.`,
+          },
+        });
+      }
 
       return updatedAssignment;
     }
