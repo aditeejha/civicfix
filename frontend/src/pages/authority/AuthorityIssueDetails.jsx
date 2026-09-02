@@ -9,29 +9,21 @@ export default function AuthorityIssueDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [actionLoading, setActionLoading] =
-    useState(false);
-
-  const [actionError, setActionError] =
-    useState("");
-
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const [resolveNote, setResolveNote] =
-    useState("");
+  const [resolveNote, setResolveNote] = useState("");
 
   async function fetchIssue() {
     try {
-      const response = await api.get(
-        `/issues/${id}`
-      );
+      setError("");
+
+      const response = await api.get(`/issues/${id}`);
 
       setIssue(response.data.issue);
     } catch (error) {
-      console.error(
-        "Fetch issue error:",
-        error
-      );
+      console.error("Fetch issue error:", error);
 
       setError(
         error.response?.data?.message ||
@@ -58,16 +50,23 @@ export default function AuthorityIssueDetails() {
   }
 
   function formatDate(date) {
-    return new Date(date).toLocaleString(
-      "en-IN",
-      {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      }
-    );
+    if (!date) {
+      return "Not available";
+    }
+
+    return new Date(date).toLocaleString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+
+  function getStatusClass(status) {
+    return `status-badge status-${status
+      ?.toLowerCase()
+      .replace(/_/g, "-")}`;
   }
 
   const assignment =
@@ -149,7 +148,13 @@ export default function AuthorityIssueDetails() {
   if (loading) {
     return (
       <div className="page">
-        <p>Loading issue...</p>
+        <div className="empty-state">
+          <h2>Loading issue...</h2>
+
+          <p>
+            Please wait while we load the issue details.
+          </p>
+        </div>
       </div>
     );
   }
@@ -157,11 +162,17 @@ export default function AuthorityIssueDetails() {
   if (error || !issue) {
     return (
       <div className="page">
-        <Link to="/authority">
-          ← Back to Authority Dashboard
-        </Link>
+        <div className="page-header">
+          <Link to="/authority">
+            ← Back to Authority Dashboard
+          </Link>
 
-        <h1>Issue</h1>
+          <p className="eyebrow">
+            AUTHORITY ISSUE
+          </p>
+
+          <h1>Issue</h1>
+        </div>
 
         <div className="form-error">
           {error || "Issue not found."}
@@ -197,6 +208,10 @@ export default function AuthorityIssueDetails() {
 
   return (
     <div className="page">
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
+
       <div className="page-header">
         <Link to="/authority">
           ← Back to Authority Dashboard
@@ -206,18 +221,27 @@ export default function AuthorityIssueDetails() {
           AUTHORITY ISSUE
         </p>
 
-        <h1>
-          {issue.title || "Civic Issue"}
-        </h1>
+        <div className="issue-detail-title-row">
+          <div>
+            <h1>
+              {issue.title || "Civic Issue"}
+            </h1>
 
-        <span
-          className={`status-badge status-${issue.status
-            ?.toLowerCase()
-            .replace(/_/g, "-")}`}
-        >
-          {formatStatus(issue.status)}
-        </span>
+            <p>
+              Reported on{" "}
+              {formatDate(issue.createdAt)}
+            </p>
+          </div>
+
+          <span className={getStatusClass(issue.status)}>
+            {formatStatus(issue.status)}
+          </span>
+        </div>
       </div>
+
+      {/* =====================================================
+          MESSAGES
+      ===================================================== */}
 
       {success && (
         <div className="form-success">
@@ -231,29 +255,49 @@ export default function AuthorityIssueDetails() {
         </div>
       )}
 
-      {/* Assignment actions */}
+      {/* =====================================================
+          ASSIGNMENT & WORKFLOW
+      ===================================================== */}
 
       {assignment && (
-        <section className="details-card">
+        <section className="details-card assignment-card">
           <p className="eyebrow">
             ASSIGNMENT
           </p>
 
-          <h2>
-            {assignment.authority?.name ||
-              "Assigned Authority"}
-          </h2>
+          <div className="assignment-header">
+            <div>
+              <h2>
+                {assignment.authority?.name ||
+                  "Assigned Authority"}
+              </h2>
 
-          <p>
-            {assignment.authority?.email ||
-              ""}
-          </p>
+              <p>
+                {assignment.authority?.email ||
+                  "Authority email unavailable"}
+              </p>
+            </div>
+
+            <span
+              className={
+                isCompleted
+                  ? "workflow-badge workflow-complete"
+                  : isAccepted
+                  ? "workflow-badge workflow-active"
+                  : "workflow-badge workflow-pending"
+              }
+            >
+              {isCompleted
+                ? "Completed"
+                : isAccepted
+                ? "Accepted"
+                : "Pending Acceptance"}
+            </span>
+          </div>
 
           <div className="details-grid">
-            <div>
-              <span className="detail-label">
-                Assigned
-              </span>
+            <div className="detail-item">
+              <span>Assigned</span>
 
               <strong>
                 {formatDate(
@@ -262,10 +306,8 @@ export default function AuthorityIssueDetails() {
               </strong>
             </div>
 
-            <div>
-              <span className="detail-label">
-                Acceptance
-              </span>
+            <div className="detail-item">
+              <span>Acceptance</span>
 
               <strong>
                 {isAccepted
@@ -275,10 +317,8 @@ export default function AuthorityIssueDetails() {
             </div>
 
             {assignment.acceptedAt && (
-              <div>
-                <span className="detail-label">
-                  Accepted At
-                </span>
+              <div className="detail-item">
+                <span>Accepted At</span>
 
                 <strong>
                   {formatDate(
@@ -289,15 +329,36 @@ export default function AuthorityIssueDetails() {
             )}
 
             {assignment.completedAt && (
-              <div>
-                <span className="detail-label">
-                  Completed At
-                </span>
+              <div className="detail-item">
+                <span>Completed At</span>
 
                 <strong>
                   {formatDate(
                     assignment.completedAt
                   )}
+                </strong>
+              </div>
+            )}
+
+            {assignment.department && (
+              <div className="detail-item">
+                <span>Department</span>
+
+                <strong>
+                  {assignment.department.name}
+                </strong>
+              </div>
+            )}
+
+            {assignment.ward && (
+              <div className="detail-item">
+                <span>Ward</span>
+
+                <strong>
+                  {assignment.ward.name}
+                  {assignment.ward.code
+                    ? ` (${assignment.ward.code})`
+                    : ""}
                 </strong>
               </div>
             )}
@@ -307,6 +368,7 @@ export default function AuthorityIssueDetails() {
             {canAccept && (
               <button
                 type="button"
+                className="workflow-primary-button"
                 onClick={handleAccept}
                 disabled={actionLoading}
               >
@@ -319,6 +381,7 @@ export default function AuthorityIssueDetails() {
             {canStart && (
               <button
                 type="button"
+                className="workflow-primary-button"
                 onClick={handleStart}
                 disabled={actionLoading}
               >
@@ -331,6 +394,7 @@ export default function AuthorityIssueDetails() {
             {canResolve && (
               <form
                 onSubmit={handleResolve}
+                className="resolve-form"
               >
                 <div className="form-group">
                   <label htmlFor="resolve-note">
@@ -347,19 +411,18 @@ export default function AuthorityIssueDetails() {
                     }
                     placeholder="Describe the work completed..."
                     rows={4}
-                    disabled={
-                      actionLoading
-                    }
+                    disabled={actionLoading}
                   />
                 </div>
 
                 <button
                   type="submit"
+                  className="workflow-success-button"
                   disabled={actionLoading}
                 >
                   {actionLoading
                     ? "Resolving..."
-                    : "Resolve Issue"}
+                    : "✓ Resolve Issue"}
                 </button>
               </form>
             )}
@@ -368,17 +431,35 @@ export default function AuthorityIssueDetails() {
               !canStart &&
               !canResolve &&
               !isCompleted && (
-                <p>
-                  No assignment action is
-                  currently available.
-                </p>
+                <div className="workflow-info">
+                  <strong>
+                    No action available
+                  </strong>
+
+                  <p>
+                    The issue is currently in a
+                    state where no workflow action
+                    can be performed.
+                  </p>
+                </div>
               )}
 
             {isCompleted && (
-              <p>
-                ✓ This assignment has been
-                completed.
-              </p>
+              <div className="workflow-complete-message">
+                <span>✓</span>
+
+                <div>
+                  <strong>
+                    Assignment completed
+                  </strong>
+
+                  <p>
+                    This issue has been marked as
+                    resolved and is now awaiting
+                    citizen verification.
+                  </p>
+                </div>
+              </div>
             )}
           </div>
         </section>
@@ -390,72 +471,65 @@ export default function AuthorityIssueDetails() {
             ASSIGNMENT
           </p>
 
-          <p>
-            This issue has not been assigned
-            yet.
-          </p>
+          <div className="workflow-info">
+            <strong>
+              Not assigned yet
+            </strong>
+
+            <p>
+              This issue has not been assigned to
+              an authority.
+            </p>
+          </div>
         </section>
       )}
 
-      {/* Issue information */}
+      {/* =====================================================
+          ISSUE INFORMATION
+      ===================================================== */}
 
       <section className="details-card">
         <p className="eyebrow">
           ISSUE INFORMATION
         </p>
 
+        <h2>Issue Overview</h2>
+
         <div className="details-grid">
-          <div>
-            <span className="detail-label">
-              Category
-            </span>
+          <div className="detail-item">
+            <span>Category</span>
 
             <strong>
-              {formatStatus(
-                issue.category
-              )}
+              {formatStatus(issue.category)}
             </strong>
           </div>
 
-          <div>
-            <span className="detail-label">
-              Severity
-            </span>
+          <div className="detail-item">
+            <span>Severity</span>
 
             <strong>
-              {formatStatus(
-                issue.severity
-              )}
+              {formatStatus(issue.severity)}
             </strong>
           </div>
 
-          <div>
-            <span className="detail-label">
-              Reported
-            </span>
+          <div className="detail-item">
+            <span>Reported</span>
 
             <strong>
-              {formatDate(
-                issue.createdAt
-              )}
+              {formatDate(issue.createdAt)}
             </strong>
           </div>
 
-          <div>
-            <span className="detail-label">
-              Complaints
-            </span>
+          <div className="detail-item">
+            <span>Complaints</span>
 
             <strong>
-              {issue._count?.complaints ||
-                0}
+              {issue._count?.complaints || 0}
             </strong>
           </div>
 
-          <div>
-            <span className="detail-label">
-              Upvotes
-            </span>
+          <div className="detail-item">
+            <span>Upvotes</span>
 
             <strong>
               {issue._count?.upvotes || 0}
@@ -464,12 +538,16 @@ export default function AuthorityIssueDetails() {
         </div>
       </section>
 
-      {/* Description */}
+      {/* =====================================================
+          DESCRIPTION
+      ===================================================== */}
 
       <section className="details-card">
         <p className="eyebrow">
           DESCRIPTION
         </p>
+
+        <h2>Reported Problem</h2>
 
         <p className="details-description">
           {issue.description ||
@@ -477,26 +555,34 @@ export default function AuthorityIssueDetails() {
         </p>
       </section>
 
-      {/* Location */}
+      {/* =====================================================
+          LOCATION
+      ===================================================== */}
 
       <section className="details-card">
         <p className="eyebrow">
           LOCATION
         </p>
 
-        <h3>
-          📍{" "}
-          {issue.address ||
-            "Address unavailable"}
-        </h3>
+        <h2>Issue Location</h2>
 
-        <p>
-          Coordinates: {issue.latitude},{" "}
-          {issue.longitude}
-        </p>
+        <div className="location-box">
+          <h3>
+            📍{" "}
+            {issue.address ||
+              "Address unavailable"}
+          </h3>
+
+          <p>
+            Coordinates: {issue.latitude},{" "}
+            {issue.longitude}
+          </p>
+        </div>
       </section>
 
-      {/* Department */}
+      {/* =====================================================
+          DEPARTMENT
+      ===================================================== */}
 
       {issue.department && (
         <section className="details-card">
@@ -504,13 +590,23 @@ export default function AuthorityIssueDetails() {
             DEPARTMENT
           </p>
 
-          <h3>
-            {issue.department.name}
-          </h3>
+          <h2>Responsible Department</h2>
+
+          <div className="organization-highlight">
+            <strong>
+              {issue.department.name}
+            </strong>
+
+            <span>
+              Assigned department
+            </span>
+          </div>
         </section>
       )}
 
-      {/* Ward */}
+      {/* =====================================================
+          WARD
+      ===================================================== */}
 
       {issue.ward && (
         <section className="details-card">
@@ -518,40 +614,45 @@ export default function AuthorityIssueDetails() {
             WARD
           </p>
 
-          <h3>{issue.ward.name}</h3>
+          <h2>Service Area</h2>
 
-          {issue.ward.code && (
-            <p>
-              Ward Code: {issue.ward.code}
-            </p>
-          )}
+          <div className="organization-highlight">
+            <strong>
+              {issue.ward.name}
+            </strong>
+
+            {issue.ward.code && (
+              <span>
+                Ward Code: {issue.ward.code}
+              </span>
+            )}
+          </div>
         </section>
       )}
 
-      {/* SLA */}
+      {/* =====================================================
+          SLA
+      ===================================================== */}
 
       {issue.sla && (
         <section className="details-card">
           <p className="eyebrow">
-            SLA
+            SERVICE LEVEL
           </p>
 
+          <h2>SLA Information</h2>
+
           <div className="details-grid">
-            <div>
-              <span className="detail-label">
-                Resolution Time
-              </span>
+            <div className="detail-item">
+              <span>Resolution Time</span>
 
               <strong>
-                {issue.sla.durationMin}{" "}
-                minutes
+                {issue.sla.durationMin} minutes
               </strong>
             </div>
 
-            <div>
-              <span className="detail-label">
-                Deadline
-              </span>
+            <div className="detail-item">
+              <span>Deadline</span>
 
               <strong>
                 {formatDate(
@@ -560,12 +661,16 @@ export default function AuthorityIssueDetails() {
               </strong>
             </div>
 
-            <div>
-              <span className="detail-label">
-                SLA Status
-              </span>
+            <div className="detail-item">
+              <span>SLA Status</span>
 
-              <strong>
+              <strong
+                className={
+                  issue.sla.breached
+                    ? "text-danger"
+                    : "text-success"
+                }
+              >
                 {issue.sla.breached
                   ? "Breached"
                   : "Within SLA"}
@@ -575,7 +680,9 @@ export default function AuthorityIssueDetails() {
         </section>
       )}
 
-      {/* Status timeline */}
+      {/* =====================================================
+          STATUS TIMELINE
+      ===================================================== */}
 
       <section className="details-card">
         <p className="eyebrow">
@@ -584,51 +691,71 @@ export default function AuthorityIssueDetails() {
 
         <h2>Status Timeline</h2>
 
-        {issue.statusHistory?.length >
-        0 ? (
+        {issue.statusHistory?.length > 0 ? (
           <div className="timeline">
             {issue.statusHistory.map(
-              (history, index) => (
-                <div
-                  className="timeline-item"
-                  key={history.id}
-                >
-                  <div className="timeline-marker">
-                    {index ===
-                    issue.statusHistory
-                      .length -
-                      1
-                      ? "●"
-                      : "✓"}
-                  </div>
+              (history, index) => {
+                const isLast =
+                  index ===
+                  issue.statusHistory.length - 1;
 
-                  <div className="timeline-content">
-                    <h3>
-                      {formatStatus(
-                        history.status
+                return (
+                  <div
+                    className={`timeline-item ${
+                      isLast
+                        ? "timeline-item-last"
+                        : ""
+                    }`}
+                    key={history.id}
+                  >
+                    <div className="timeline-marker">
+                      {isLast ? "●" : "✓"}
+                    </div>
+
+                    <div className="timeline-content">
+                      <div className="timeline-title-row">
+                        <h3>
+                          {formatStatus(
+                            history.status
+                          )}
+                        </h3>
+
+                        {isLast && (
+                          <span className="timeline-current">
+                            Current
+                          </span>
+                        )}
+                      </div>
+
+                      {history.note && (
+                        <p>
+                          {history.note}
+                        </p>
                       )}
-                    </h3>
 
-                    {history.note && (
-                      <p>
-                        {history.note}
-                      </p>
-                    )}
-
-                    <small>
-                      {formatDate(
-                        history.createdAt
+                      {!history.note && (
+                        <p>
+                          Status updated.
+                        </p>
                       )}
-                    </small>
+
+                      <small>
+                        {formatDate(
+                          history.createdAt
+                        )}
+                      </small>
+                    </div>
                   </div>
-                </div>
-              )
+                );
+              }
             )}
           </div>
         ) : (
-          <p>
-            No status history available.
-          </p>
+          <div className="empty-inline">
+            <p>
+              No status history available.
+            </p>
+          </div>
         )}
       </section>
     </div>
