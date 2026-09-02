@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/axios";
+import Notifications from "../../components/Notifications";
 
 export default function CitizenDashboard() {
   const { user, logout } = useAuth();
@@ -131,6 +132,10 @@ export default function CitizenDashboard() {
             </div>
           </Link>
         </section>
+
+        {/* Notifications */}
+
+        <Notifications />
 
         <section className="recent-section">
           <div className="section-header">
