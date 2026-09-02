@@ -11,15 +11,15 @@ const router = Router();
 router.get("/", authenticate, getNotificationsController);
 
 router.patch(
-  "/:notificationId/read",
-  authenticate,
-  markNotificationAsReadController
-);
-
-router.patch(
   "/read-all",
   authenticate,
   markAllNotificationsAsReadController
+);
+
+router.patch(
+  "/:notificationId/read",
+  authenticate,
+  markNotificationAsReadController
 );
 
 export default router;
