@@ -21,6 +21,7 @@ import AuthorityIssueDetails from "./pages/authority/AuthorityIssueDetails";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminIssues from "./pages/admin/AdminIssues";
+import AdminOrganization from "./pages/admin/AdminOrganization";
 
 function Home() {
   return (
@@ -147,6 +148,11 @@ export default function App() {
           <Route
             path="/admin/issues"
             element={<AdminIssues />}
+          />
+
+          <Route
+            path="/admin/organization"
+            element={<AdminOrganization />}
           />
         </Route>
 

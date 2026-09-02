@@ -10,15 +10,11 @@ export default function AuthorityDashboard() {
   useEffect(() => {
     async function fetchAssignments() {
       try {
-        const response = await api.get(
-          "/assignments/my"
-        );
+        const response = await api.get("/assignments/my");
 
-        setAssignments(
-          response.data.assignments || []
-        );
+        setAssignments(response.data.assignments || []);
       } catch (error) {
-        console.error(error);
+        console.error("Fetch assignments error:", error);
 
         setError(
           error.response?.data?.message ||
@@ -36,42 +32,72 @@ export default function AuthorityDashboard() {
     return status
       ?.replace(/_/g, " ")
       .toLowerCase()
-      .replace(/\b\w/g, (char) =>
-        char.toUpperCase()
-      );
+      .replace(/\b\w/g, (char) => char.toUpperCase());
   }
 
   function formatDate(date) {
-    return new Date(date).toLocaleDateString(
-      "en-IN",
-      {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      }
-    );
+    if (!date) return "Not available";
+
+    return new Date(date).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+  function getAssignmentStage(assignment) {
+    const status = assignment.issue?.status;
+
+    if (assignment.completedAt || status === "RESOLVED") {
+      return "Resolved";
+    }
+
+    if (status === "IN_PROGRESS") {
+      return "In Progress";
+    }
+
+    if (assignment.acceptedAt || status === "ACKNOWLEDGED") {
+      return "Accepted";
+    }
+
+    return "Pending Acceptance";
   }
 
   const pending = assignments.filter(
-    (a) => !a.acceptedAt
+    (assignment) =>
+      !assignment.acceptedAt &&
+      !assignment.completedAt &&
+      assignment.issue?.status !== "RESOLVED"
   ).length;
 
   const active = assignments.filter(
-    (a) =>
-      a.issue?.status === "ACKNOWLEDGED" ||
-      a.issue?.status === "IN_PROGRESS"
+    (assignment) =>
+      !assignment.completedAt &&
+      (
+        assignment.issue?.status === "ACKNOWLEDGED" ||
+        assignment.issue?.status === "IN_PROGRESS"
+      )
   ).length;
 
   const resolved = assignments.filter(
-    (a) =>
-      a.issue?.status === "RESOLVED"
+    (assignment) =>
+      assignment.completedAt ||
+      assignment.issue?.status === "RESOLVED"
   ).length;
 
   if (loading) {
     return (
       <div className="page">
-        <h1>Authority Dashboard</h1>
-        <p>Loading assignments...</p>
+        <div className="page-header">
+          <p className="eyebrow">AUTHORITY</p>
+          <h1>Authority Dashboard</h1>
+          <p>Manage and track your assigned civic issues.</p>
+        </div>
+
+        <div className="empty-state">
+          <h2>Loading assignments...</h2>
+          <p>Please wait while we fetch your assigned issues.</p>
+        </div>
       </div>
     );
   }
@@ -79,14 +105,16 @@ export default function AuthorityDashboard() {
   return (
     <div className="page">
       <div className="page-header">
+        <p className="eyebrow">AUTHORITY</p>
+
         <h1>Authority Dashboard</h1>
 
         <p>
-          Manage your assigned civic issues.
+          Manage and track civic issues assigned to you.
         </p>
       </div>
 
-      <div className="stats-grid">
+      <section className="stats-grid">
         <div className="stat-card">
           <h2>{assignments.length}</h2>
           <p>Total Assigned</p>
@@ -106,7 +134,7 @@ export default function AuthorityDashboard() {
           <h2>{resolved}</h2>
           <p>Resolved</p>
         </div>
-      </div>
+      </section>
 
       {error && (
         <div className="form-error">
@@ -114,93 +142,105 @@ export default function AuthorityDashboard() {
         </div>
       )}
 
-      {!error &&
-        assignments.length === 0 && (
-          <div className="empty-state">
-            <h2>
-              No assignments yet
-            </h2>
+      {!error && assignments.length === 0 && (
+        <div className="empty-state">
+          <h2>No assignments yet</h2>
 
-            <p>
-              Issues assigned to you will
-              appear here.
-            </p>
-          </div>
-        )}
+          <p>
+            Issues assigned to you will appear here.
+          </p>
+        </div>
+      )}
 
       {assignments.length > 0 && (
-        <div className="complaints-list">
-          {assignments.map(
-            (assignment) => (
-              <Link
-                key={assignment.id}
-                to={`/authority/issues/${assignment.issue.id}`}
-                className="complaint-card"
-              >
-                <div className="complaint-card-header">
-                  <div>
-                    <h2>
-                      {assignment.issue.title}
-                    </h2>
+        <section>
+          <div className="page-header">
+            <p className="eyebrow">MY WORK</p>
 
-                    <p>
-                      {formatStatus(
-                        assignment.issue
-                          .category
-                      )}
-                    </p>
+            <h2>Assigned Issues</h2>
+
+            <p>
+              Select an issue to view its details and update its progress.
+            </p>
+          </div>
+
+          <div className="complaints-list">
+            {assignments.map((assignment) => {
+              const issue = assignment.issue;
+
+              if (!issue) {
+                return null;
+              }
+
+              const stage = getAssignmentStage(assignment);
+
+              return (
+                <Link
+                  key={assignment.id}
+                  to={`/authority/issues/${issue.id}`}
+                  className="complaint-card"
+                >
+                  <div className="complaint-card-header">
+                    <div>
+                      <h2>{issue.title}</h2>
+
+                      <p>
+                        {formatStatus(issue.category)}
+                      </p>
+                    </div>
+
+                    <span
+                      className={`status-badge status-${issue.status
+                        ?.toLowerCase()
+                        .replace(/_/g, "-")}`}
+                    >
+                      {formatStatus(issue.status)}
+                    </span>
                   </div>
 
-                  <span
-                    className={`status-badge status-${assignment.issue.status
-                      .toLowerCase()
-                      .replace(
-                        /_/g,
-                        "-"
-                      )}`}
-                  >
-                    {formatStatus(
-                      assignment.issue
-                        .status
-                    )}
-                  </span>
-                </div>
-
-                <p className="complaint-description">
-                  {assignment.issue
-                    .description ||
-                    "No description"}
-                </p>
-
-                <div className="complaint-meta">
-                  <span>
-                    Assigned{" "}
-                    {formatDate(
-                      assignment.assignedAt
-                    )}
-                  </span>
-
-                  <span>
-                    {assignment.acceptedAt
-                      ? "Accepted"
-                      : "Pending"}
-                  </span>
-                </div>
-
-                {assignment.issue
-                  .address && (
-                  <p className="complaint-address">
-                    📍{" "}
-                    {
-                      assignment.issue
-                        .address
-                    }
+                  <p className="complaint-description">
+                    {issue.description || "No description provided."}
                   </p>
-                )}
-              </Link>
-            )
-          )}
-        </div>
+
+                  <div className="complaint-meta">
+                    <span>
+                      Assigned {formatDate(assignment.assignedAt)}
+                    </span>
+
+                    <span>
+                      {stage}
+                    </span>
+                  </div>
+
+                  {(assignment.department || assignment.ward) && (
+                    <div className="complaint-meta">
+                      {assignment.department && (
+                        <span>
+                          Department: {assignment.department.name}
+                        </span>
+                      )}
+
+                      {assignment.ward && (
+                        <span>
+                          Ward: {assignment.ward.name}
+                          {assignment.ward.code
+                            ? ` (${assignment.ward.code})`
+                            : ""}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {issue.address && (
+                    <p className="complaint-address">
+                      📍 {issue.address}
+                    </p>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </section>
       )}
     </div>
   );
