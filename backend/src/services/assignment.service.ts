@@ -14,6 +14,9 @@ export async function createAssignment(
     where: {
       id: data.issueId,
     },
+    include: {
+      assignments: true,
+    },
   });
 
   if (!issue) {
@@ -54,27 +57,68 @@ export async function createAssignment(
     }
   }
 
-  const assignment = await prisma.assignment.create({
-    data: {
-      issueId: data.issueId,
-      authorityId: data.authorityId,
-      departmentId: data.departmentId,
-      wardId: data.wardId,
-    },
-    include: {
-      authority: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
+  const activeAssignment = issue.assignments.find(
+    (assignment) => !assignment.completedAt
+  );
+
+  const assignment = await prisma.$transaction(
+    async (tx) => {
+      // Reassign an existing active assignment
+      // instead of creating a duplicate assignment.
+      if (activeAssignment) {
+        return tx.assignment.update({
+          where: {
+            id: activeAssignment.id,
+          },
+          data: {
+            authorityId: data.authorityId,
+            departmentId: data.departmentId,
+            wardId: data.wardId,
+            acceptedAt: null,
+            completedAt: null,
+            assignedAt: new Date(),
+          },
+          include: {
+            authority: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+              },
+            },
+            department: true,
+            ward: true,
+            issue: true,
+          },
+        });
+      }
+
+      // Create a new assignment when
+      // there is no active assignment.
+      return tx.assignment.create({
+        data: {
+          issueId: data.issueId,
+          authorityId: data.authorityId,
+          departmentId: data.departmentId,
+          wardId: data.wardId,
         },
-      },
-      department: true,
-      ward: true,
-      issue: true,
-    },
-  });
+        include: {
+          authority: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+          department: true,
+          ward: true,
+          issue: true,
+        },
+      });
+    }
+  );
 
   return assignment;
 }
@@ -104,49 +148,52 @@ export async function acceptAssignment(
     throw new Error("ALREADY_ACCEPTED");
   }
 
-  const result = await prisma.$transaction(async (tx) => {
-    const updatedAssignment = await tx.assignment.update({
-      where: {
-        id: assignmentId,
-      },
-      data: {
-        acceptedAt: new Date(),
-      },
-      include: {
-        authority: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
+  const result = await prisma.$transaction(
+    async (tx) => {
+      const updatedAssignment =
+        await tx.assignment.update({
+          where: {
+            id: assignmentId,
           },
+          data: {
+            acceptedAt: new Date(),
+          },
+          include: {
+            authority: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+              },
+            },
+            department: true,
+            ward: true,
+            issue: true,
+          },
+        });
+
+      await tx.issue.update({
+        where: {
+          id: assignment.issueId,
         },
-        department: true,
-        ward: true,
-        issue: true,
-      },
-    });
+        data: {
+          status: "ACKNOWLEDGED",
+        },
+      });
 
-    await tx.issue.update({
-      where: {
-        id: assignment.issueId,
-      },
-      data: {
-        status: "ACKNOWLEDGED",
-      },
-    });
+      await tx.statusHistory.create({
+        data: {
+          issueId: assignment.issueId,
+          changedBy: authorityId,
+          status: "ACKNOWLEDGED",
+          note: "Authority accepted the assignment",
+        },
+      });
 
-    await tx.statusHistory.create({
-      data: {
-        issueId: assignment.issueId,
-        changedBy: authorityId,
-        status: "ACKNOWLEDGED",
-        note: "Authority accepted the assignment",
-      },
-    });
-
-    return updatedAssignment;
-  });
+      return updatedAssignment;
+    }
+  );
 
   return result;
 }
@@ -180,27 +227,30 @@ export async function startAssignment(
     throw new Error("INVALID_STATUS");
   }
 
-  const result = await prisma.$transaction(async (tx) => {
-    const updatedIssue = await tx.issue.update({
-      where: {
-        id: assignment.issueId,
-      },
-      data: {
-        status: "IN_PROGRESS",
-      },
-    });
+  const result = await prisma.$transaction(
+    async (tx) => {
+      const updatedIssue =
+        await tx.issue.update({
+          where: {
+            id: assignment.issueId,
+          },
+          data: {
+            status: "IN_PROGRESS",
+          },
+        });
 
-    await tx.statusHistory.create({
-      data: {
-        issueId: assignment.issueId,
-        changedBy: authorityId,
-        status: "IN_PROGRESS",
-        note: "Authority started working on the issue",
-      },
-    });
+      await tx.statusHistory.create({
+        data: {
+          issueId: assignment.issueId,
+          changedBy: authorityId,
+          status: "IN_PROGRESS",
+          note: "Authority started working on the issue",
+        },
+      });
 
-    return updatedIssue;
-  });
+      return updatedIssue;
+    }
+  );
 
   return result;
 }
@@ -235,41 +285,48 @@ export async function resolveAssignment(
     throw new Error("INVALID_STATUS");
   }
 
-  const result = await prisma.$transaction(async (tx) => {
-    const updatedAssignment = await tx.assignment.update({
-      where: {
-        id: assignmentId,
-      },
-      data: {
-        completedAt: new Date(),
-      },
-    });
+  const result = await prisma.$transaction(
+    async (tx) => {
+      const updatedAssignment =
+        await tx.assignment.update({
+          where: {
+            id: assignmentId,
+          },
+          data: {
+            completedAt: new Date(),
+          },
+        });
 
-    await tx.issue.update({
-      where: {
-        id: assignment.issueId,
-      },
-      data: {
-        status: "RESOLVED",
-      },
-    });
+      await tx.issue.update({
+        where: {
+          id: assignment.issueId,
+        },
+        data: {
+          status: "RESOLVED",
+        },
+      });
 
-    await tx.statusHistory.create({
-      data: {
-        issueId: assignment.issueId,
-        changedBy: authorityId,
-        status: "RESOLVED",
-        note: note ?? "Authority resolved the issue",
-      },
-    });
+      await tx.statusHistory.create({
+        data: {
+          issueId: assignment.issueId,
+          changedBy: authorityId,
+          status: "RESOLVED",
+          note:
+            note ??
+            "Authority resolved the issue",
+        },
+      });
 
-    return updatedAssignment;
-  });
+      return updatedAssignment;
+    }
+  );
 
   return result;
 }
 
-export async function getMyAssignments(authorityId: string) {
+export async function getMyAssignments(
+  authorityId: string
+) {
   return prisma.assignment.findMany({
     where: {
       authorityId,

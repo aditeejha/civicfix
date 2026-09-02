@@ -4,50 +4,44 @@ import api from "../../api/axios";
 
 export default function AdminIssues() {
   const [issues, setIssues] = useState([]);
-  const [authorities, setAuthorities] =
-    useState([]);
+  const [authorities, setAuthorities] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [wards, setWards] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [assigningIssue, setAssigningIssue] =
-    useState(null);
+  const [assigningIssue, setAssigningIssue] = useState(null);
+  const [selectedAuthority, setSelectedAuthority] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [selectedWard, setSelectedWard] = useState("");
 
-  const [selectedAuthority, setSelectedAuthority] =
-    useState("");
-
-  const [actionLoading, setActionLoading] =
-    useState(false);
-
-  const [actionMessage, setActionMessage] =
-    useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
 
   async function fetchData() {
     try {
       setLoading(true);
       setError("");
 
-      const [issuesResponse, authoritiesResponse] =
-        await Promise.all([
-          api.get("/issues/admin/all"),
-          api.get(
-            "/organization/authorities"
-          ),
-        ]);
+      const [
+        issuesResponse,
+        authoritiesResponse,
+        departmentsResponse,
+        wardsResponse,
+      ] = await Promise.all([
+        api.get("/issues/admin/all"),
+        api.get("/organization/authorities"),
+        api.get("/organization/departments"),
+        api.get("/organization/wards"),
+      ]);
 
-      setIssues(
-        issuesResponse.data.issues || []
-      );
-
-      setAuthorities(
-        authoritiesResponse.data.authorities ||
-          []
-      );
+      setIssues(issuesResponse.data.issues || []);
+      setAuthorities(authoritiesResponse.data.authorities || []);
+      setDepartments(departmentsResponse.data.departments || []);
+      setWards(wardsResponse.data.wards || []);
     } catch (error) {
-      console.error(
-        "Fetch admin issues error:",
-        error
-      );
+      console.error("Fetch admin issues error:", error);
 
       setError(
         error.response?.data?.message ||
@@ -63,90 +57,87 @@ export default function AdminIssues() {
   }, []);
 
   function formatLabel(value) {
-    if (!value) {
-      return "";
-    }
+    if (!value) return "";
 
     return value
       .replace(/_/g, " ")
       .toLowerCase()
-      .replace(/\b\w/g, (char) =>
-        char.toUpperCase()
-      );
+      .replace(/\b\w/g, (char) => char.toUpperCase());
   }
 
   function formatDate(date) {
-    if (!date) {
-      return "—";
-    }
+    if (!date) return "—";
 
-    return new Date(date).toLocaleDateString(
-      "en-IN",
-      {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      }
-    );
+    return new Date(date).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
   }
 
   function getActiveAssignment(issue) {
-    if (!issue.assignments?.length) {
+    if (!issue?.assignments?.length) {
       return null;
     }
 
     return (
       issue.assignments.find(
-        (assignment) =>
-          !assignment.completedAt
-      ) ||
-      issue.assignments[
-        issue.assignments.length - 1
-      ]
+        (assignment) => !assignment.completedAt
+      ) || null
     );
   }
 
-  function openAssignment(issue) {
+  function openAssignment(event, issue) {
+    // Important: prevent any parent/link/card handler
+    // from interfering with the button click.
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    console.log("ASSIGN BUTTON CLICKED", issue.id);
+
     setAssigningIssue(issue);
     setSelectedAuthority("");
+    setSelectedDepartment("");
+    setSelectedWard("");
     setActionMessage("");
   }
 
   function closeAssignment() {
-    if (actionLoading) {
-      return;
-    }
+    if (actionLoading) return;
 
     setAssigningIssue(null);
     setSelectedAuthority("");
+    setSelectedDepartment("");
+    setSelectedWard("");
     setActionMessage("");
   }
 
   async function handleAssign(event) {
     event.preventDefault();
+    event.stopPropagation();
 
     if (!assigningIssue) {
+      setActionMessage("No issue selected.");
       return;
     }
 
     if (!selectedAuthority) {
-      setActionMessage(
-        "Please select an authority."
-      );
+      setActionMessage("Please select an authority.");
       return;
     }
 
-    setActionLoading(true);
-    setActionMessage("");
-
     try {
-      const response = await api.post(
-        "/assignments",
-        {
-          issueId: assigningIssue.id,
-          authorityId: selectedAuthority,
-        }
-      );
+      setActionLoading(true);
+      setActionMessage("");
+
+      const response = await api.post("/assignments", {
+        issueId: assigningIssue.id,
+        authorityId: selectedAuthority,
+        departmentId: selectedDepartment || undefined,
+        wardId: selectedWard || undefined,
+      });
 
       setActionMessage(
         response.data.message ||
@@ -158,13 +149,12 @@ export default function AdminIssues() {
       setTimeout(() => {
         setAssigningIssue(null);
         setSelectedAuthority("");
+        setSelectedDepartment("");
+        setSelectedWard("");
         setActionMessage("");
       }, 700);
     } catch (error) {
-      console.error(
-        "Assign issue error:",
-        error
-      );
+      console.error("Assign issue error:", error);
 
       setActionMessage(
         error.response?.data?.message ||
@@ -183,7 +173,6 @@ export default function AdminIssues() {
         </Link>
 
         <h1>Manage Issues</h1>
-
         <p>Loading issues...</p>
       </div>
     );
@@ -207,8 +196,6 @@ export default function AdminIssues() {
 
   return (
     <div className="page">
-      {/* Header */}
-
       <div className="page-header">
         <Link to="/admin">
           ← Back to Admin Dashboard
@@ -226,8 +213,6 @@ export default function AdminIssues() {
         </p>
       </div>
 
-      {/* Issue count */}
-
       <div className="details-card">
         <p className="eyebrow">
           OVERVIEW
@@ -235,19 +220,13 @@ export default function AdminIssues() {
 
         <h2>
           {issues.length}{" "}
-          {issues.length === 1
-            ? "Issue"
-            : "Issues"}
+          {issues.length === 1 ? "Issue" : "Issues"}
         </h2>
       </div>
 
-      {/* Issues */}
-
       {issues.length === 0 ? (
         <div className="details-card">
-          <p>
-            No issues found.
-          </p>
+          <p>No issues found.</p>
         </div>
       ) : (
         <div className="issue-list">
@@ -273,32 +252,24 @@ export default function AdminIssues() {
                   </div>
 
                   <span className="status-badge">
-                    {formatLabel(
-                      issue.status
-                    )}
+                    {formatLabel(issue.status)}
                   </span>
                 </div>
 
                 <div className="issue-meta">
                   <span>
                     Category:{" "}
-                    {formatLabel(
-                      issue.category
-                    )}
+                    {formatLabel(issue.category)}
                   </span>
 
                   <span>
                     Severity:{" "}
-                    {formatLabel(
-                      issue.severity
-                    )}
+                    {formatLabel(issue.severity)}
                   </span>
 
                   <span>
                     Reported:{" "}
-                    {formatDate(
-                      issue.createdAt
-                    )}
+                    {formatDate(issue.createdAt)}
                   </span>
                 </div>
 
@@ -317,19 +288,20 @@ export default function AdminIssues() {
                     <p>
                       {assignment.authority.name}
                       {" — "}
-                      {
-                        assignment.authority
-                          .email
-                      }
+                      {assignment.authority.email}
                     </p>
                   ) : (
-                    <p>
-                      Not assigned
-                    </p>
+                    <p>Not assigned</p>
                   )}
                 </div>
 
-                <div className="issue-card-actions">
+                <div
+                  className="issue-card-actions"
+                  style={{
+                    position: "relative",
+                    zIndex: 20,
+                  }}
+                >
                   <Link
                     to={`/admin/issues/${issue.id}`}
                   >
@@ -338,20 +310,26 @@ export default function AdminIssues() {
                     </button>
                   </Link>
 
-                  {!assignment &&
-                    issue.status !==
-                      "CLOSED" &&
-                    issue.status !==
-                      "DUPLICATE" && (
+                  {issue.status !== "CLOSED" &&
+                    issue.status !== "DUPLICATE" && (
                       <button
                         type="button"
-                        onClick={() =>
-                          openAssignment(
-                            issue
-                          )
+                        style={{
+                          position: "relative",
+                          zIndex: 30,
+                          pointerEvents: "auto",
+                          cursor: "pointer",
+                        }}
+                        onClick={(event) =>
+                          openAssignment(event, issue)
                         }
+                        onMouseDown={(event) => {
+                          event.stopPropagation();
+                        }}
                       >
-                        Assign Authority
+                        {assignment
+                          ? "Reassign Authority"
+                          : "Assign Authority"}
                       </button>
                     )}
                 </div>
@@ -361,15 +339,35 @@ export default function AdminIssues() {
         </div>
       )}
 
-      {/* Assignment Modal */}
-
+      {/* ASSIGNMENT MODAL */}
       {assigningIssue && (
-        <div className="modal-backdrop">
-          <div className="modal">
+        <div
+          className="modal-backdrop"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              closeAssignment();
+            }
+          }}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+          }}
+        >
+          <div
+            className="modal"
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              position: "relative",
+              zIndex: 10000,
+            }}
+          >
             <div className="modal-header">
               <div>
                 <p className="eyebrow">
-                  ASSIGN ISSUE
+                  {getActiveAssignment(assigningIssue)
+                    ? "REASSIGN ISSUE"
+                    : "ASSIGN ISSUE"}
                 </p>
 
                 <h2>
@@ -387,9 +385,7 @@ export default function AdminIssues() {
               </button>
             </div>
 
-            <form
-              onSubmit={handleAssign}
-            >
+            <form onSubmit={handleAssign}>
               <div className="form-group">
                 <label htmlFor="authority">
                   Select Authority
@@ -397,9 +393,7 @@ export default function AdminIssues() {
 
                 <select
                   id="authority"
-                  value={
-                    selectedAuthority
-                  }
+                  value={selectedAuthority}
                   onChange={(event) =>
                     setSelectedAuthority(
                       event.target.value
@@ -411,19 +405,75 @@ export default function AdminIssues() {
                     Select an authority
                   </option>
 
-                  {authorities.map(
-                    (authority) => (
-                      <option
-                        key={authority.id}
-                        value={
-                          authority.id
-                        }
-                      >
-                        {authority.name} —{" "}
-                        {authority.email}
-                      </option>
+                  {authorities.map((authority) => (
+                    <option
+                      key={authority.id}
+                      value={authority.id}
+                    >
+                      {authority.name} —{" "}
+                      {authority.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="department">
+                  Select Department
+                </label>
+
+                <select
+                  id="department"
+                  value={selectedDepartment}
+                  onChange={(event) =>
+                    setSelectedDepartment(
+                      event.target.value
                     )
-                  )}
+                  }
+                  disabled={actionLoading}
+                >
+                  <option value="">
+                    Select a department
+                  </option>
+
+                  {departments.map((department) => (
+                    <option
+                      key={department.id}
+                      value={department.id}
+                    >
+                      {department.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="ward">
+                  Select Ward
+                </label>
+
+                <select
+                  id="ward"
+                  value={selectedWard}
+                  onChange={(event) =>
+                    setSelectedWard(
+                      event.target.value
+                    )
+                  }
+                  disabled={actionLoading}
+                >
+                  <option value="">
+                    Select a ward
+                  </option>
+
+                  {wards.map((ward) => (
+                    <option
+                      key={ward.id}
+                      value={ward.id}
+                    >
+                      {ward.name} ({ward.code})
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -444,9 +494,7 @@ export default function AdminIssues() {
               <div className="modal-actions">
                 <button
                   type="button"
-                  onClick={
-                    closeAssignment
-                  }
+                  onClick={closeAssignment}
                   disabled={actionLoading}
                 >
                   Cancel
@@ -461,6 +509,10 @@ export default function AdminIssues() {
                 >
                   {actionLoading
                     ? "Assigning..."
+                    : getActiveAssignment(
+                        assigningIssue
+                      )
+                    ? "Reassign Issue"
                     : "Assign Issue"}
                 </button>
               </div>
