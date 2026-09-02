@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import Notifications from "../../components/Notifications";
 
 export default function AuthorityDashboard() {
   const [assignments, setAssignments] = useState([]);
@@ -141,6 +142,10 @@ export default function AuthorityDashboard() {
           {error}
         </div>
       )}
+
+      {/* Notifications */}
+
+      <Notifications />
 
       {!error && assignments.length === 0 && (
         <div className="empty-state">
