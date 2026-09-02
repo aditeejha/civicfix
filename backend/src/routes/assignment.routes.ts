@@ -3,14 +3,16 @@ import { authenticate } from "../middleware/auth.middleware";
 import { authorizeRoles } from "../middleware/role.middleware";
 import {
   createAssignmentController,
+  getMyAssignmentsController,
+  getAllAssignmentsController,
   acceptAssignmentController,
   startAssignmentController,
   resolveAssignmentController,
-  getMyAssignmentsController,
 } from "../controllers/assignment.controller";
 
 const router = Router();
 
+// Create / reassign an issue
 router.post(
   "/",
   authenticate,
@@ -18,6 +20,15 @@ router.post(
   createAssignmentController
 );
 
+// Get all assignments — Admin
+router.get(
+  "/all",
+  authenticate,
+  authorizeRoles("ADMIN"),
+  getAllAssignmentsController
+);
+
+// Get assignments belonging to logged-in authority
 router.get(
   "/my",
   authenticate,
@@ -25,6 +36,7 @@ router.get(
   getMyAssignmentsController
 );
 
+// Accept assignment
 router.patch(
   "/:assignmentId/accept",
   authenticate,
@@ -32,6 +44,7 @@ router.patch(
   acceptAssignmentController
 );
 
+// Start work
 router.patch(
   "/:assignmentId/start",
   authenticate,
@@ -39,6 +52,7 @@ router.patch(
   startAssignmentController
 );
 
+// Resolve issue
 router.patch(
   "/:assignmentId/resolve",
   authenticate,
