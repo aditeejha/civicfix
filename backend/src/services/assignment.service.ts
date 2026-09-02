@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma";
+import { createNotification } from "./notification.service";
 
 interface CreateAssignmentData {
   issueId: string;
@@ -118,6 +119,17 @@ export async function createAssignment(
         },
       });
     }
+  );
+
+  // Notify the assigned authority.
+  await createNotification(
+    assignment.authority.id,
+    activeAssignment
+      ? "Issue Reassigned"
+      : "New Issue Assigned",
+    activeAssignment
+      ? `The civic issue "${assignment.issue.title}" has been reassigned to you.`
+      : `A new civic issue "${assignment.issue.title}" has been assigned to you.`
   );
 
   return assignment;
