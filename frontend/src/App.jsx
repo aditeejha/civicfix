@@ -23,6 +23,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminIssues from "./pages/admin/AdminIssues";
 import AdminOrganization from "./pages/admin/AdminOrganization";
 import AdminSLA from "./pages/admin/AdminSLA";
+import AdminAssignments from "./pages/admin/AdminAssignments";
 
 function Home() {
   return (
@@ -133,6 +134,11 @@ export default function App() {
           <Route
             path="/admin/issues"
             element={<AdminIssues />}
+          />
+
+          <Route
+            path="/admin/assignments"
+            element={<AdminAssignments />}
           />
 
           <Route
