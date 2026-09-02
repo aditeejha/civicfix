@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { prisma } from "./lib/prisma";
 import { startSLABreachJob } from "./jobs/sla.job";
+
 import authRoutes from "./routes/auth.routes";
 import complaintRoutes from "./routes/complaint.routes";
 import issueRoutes from "./routes/issue.routes";
@@ -11,6 +12,7 @@ import assignmentRoutes from "./routes/assignment.routes";
 import organizationRoutes from "./routes/organization.routes";
 import slaRoutes from "./routes/sla.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
+import notificationRoutes from "./routes/notification.routes";
 
 import {
   authenticate,
@@ -35,6 +37,7 @@ app.use("/api/assignments", assignmentRoutes);
 app.use("/api/organization", organizationRoutes);
 app.use("/api/sla", slaRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // ─────────────────────────────────────────────
 // HEALTH CHECK
