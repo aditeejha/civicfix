@@ -7,6 +7,7 @@ export default function AuthorityDashboard() {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeFilter, setActiveFilter] = useState("ALL");
 
   useEffect(() => {
     async function fetchAssignments() {
@@ -86,6 +87,57 @@ export default function AuthorityDashboard() {
       assignment.issue?.status === "RESOLVED"
   ).length;
 
+  const filteredAssignments = assignments.filter((assignment) => {
+    const status = assignment.issue?.status;
+
+    if (activeFilter === "PENDING") {
+      return (
+        !assignment.acceptedAt &&
+        !assignment.completedAt &&
+        status !== "RESOLVED"
+      );
+    }
+
+    if (activeFilter === "ACTIVE") {
+      return (
+        !assignment.completedAt &&
+        (
+          status === "ACKNOWLEDGED" ||
+          status === "IN_PROGRESS"
+        )
+      );
+    }
+
+    if (activeFilter === "RESOLVED") {
+      return (
+        assignment.completedAt ||
+        status === "RESOLVED"
+      );
+    }
+
+    return true;
+  });
+
+  function handleFilter(filter) {
+    setActiveFilter(filter);
+  }
+
+  function getFilterTitle() {
+    if (activeFilter === "PENDING") {
+      return "Pending Acceptance";
+    }
+
+    if (activeFilter === "ACTIVE") {
+      return "Active Issues";
+    }
+
+    if (activeFilter === "RESOLVED") {
+      return "Resolved Issues";
+    }
+
+    return "Assigned Issues";
+  }
+
   if (loading) {
     return (
       <div className="page">
@@ -116,25 +168,49 @@ export default function AuthorityDashboard() {
       </div>
 
       <section className="stats-grid">
-        <div className="stat-card">
+        <button
+          type="button"
+          className={`stat-card stat-card-button ${
+            activeFilter === "ALL" ? "stat-card-active" : ""
+          }`}
+          onClick={() => handleFilter("ALL")}
+        >
           <h2>{assignments.length}</h2>
           <p>Total Assigned</p>
-        </div>
+        </button>
 
-        <div className="stat-card">
+        <button
+          type="button"
+          className={`stat-card stat-card-button ${
+            activeFilter === "PENDING" ? "stat-card-active" : ""
+          }`}
+          onClick={() => handleFilter("PENDING")}
+        >
           <h2>{pending}</h2>
           <p>Pending Acceptance</p>
-        </div>
+        </button>
 
-        <div className="stat-card">
+        <button
+          type="button"
+          className={`stat-card stat-card-button ${
+            activeFilter === "ACTIVE" ? "stat-card-active" : ""
+          }`}
+          onClick={() => handleFilter("ACTIVE")}
+        >
           <h2>{active}</h2>
           <p>Active Issues</p>
-        </div>
+        </button>
 
-        <div className="stat-card">
+        <button
+          type="button"
+          className={`stat-card stat-card-button ${
+            activeFilter === "RESOLVED" ? "stat-card-active" : ""
+          }`}
+          onClick={() => handleFilter("RESOLVED")}
+        >
           <h2>{resolved}</h2>
           <p>Resolved</p>
-        </div>
+        </button>
       </section>
 
       {error && (
@@ -142,8 +218,6 @@ export default function AuthorityDashboard() {
           {error}
         </div>
       )}
-
-      {/* Notifications */}
 
       <Notifications />
 
@@ -160,91 +234,129 @@ export default function AuthorityDashboard() {
       {assignments.length > 0 && (
         <section>
           <div className="page-header">
-            <p className="eyebrow">MY WORK</p>
+            <div>
+              <p className="eyebrow">MY WORK</p>
 
-            <h2>Assigned Issues</h2>
+              <h2>{getFilterTitle()}</h2>
 
-            <p>
-              Select an issue to view its details and update its progress.
-            </p>
+              <p>
+                {activeFilter === "ALL"
+                  ? "Select an issue to view its details and update its progress."
+                  : `Showing ${filteredAssignments.length} issue${
+                      filteredAssignments.length === 1 ? "" : "s"
+                    } in this category.`}
+              </p>
+            </div>
+
+            {activeFilter !== "ALL" && (
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => handleFilter("ALL")}
+              >
+                Show All Issues
+              </button>
+            )}
           </div>
 
-          <div className="complaints-list">
-            {assignments.map((assignment) => {
-              const issue = assignment.issue;
+          {filteredAssignments.length === 0 ? (
+            <div className="empty-state">
+              <h3>No {getFilterTitle().toLowerCase()}.</h3>
 
-              if (!issue) {
-                return null;
-              }
+              <p>
+                There are currently no issues in this category.
+              </p>
 
-              const stage = getAssignmentStage(assignment);
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => handleFilter("ALL")}
+              >
+                View All Assigned Issues
+              </button>
+            </div>
+          ) : (
+            <div className="complaints-list">
+              {filteredAssignments.map((assignment) => {
+                const issue = assignment.issue;
 
-              return (
-                <Link
-                  key={assignment.id}
-                  to={`/authority/issues/${issue.id}`}
-                  className="complaint-card"
-                >
-                  <div className="complaint-card-header">
-                    <div>
-                      <h2>{issue.title}</h2>
+                if (!issue) {
+                  return null;
+                }
 
-                      <p>
-                        {formatStatus(issue.category)}
-                      </p>
+                const stage = getAssignmentStage(assignment);
+
+                return (
+                  <Link
+                    key={assignment.id}
+                    to={`/authority/issues/${issue.id}`}
+                    className="complaint-card"
+                  >
+                    <div className="complaint-card-header">
+                      <div>
+                        <h2>{issue.title}</h2>
+
+                        <p>
+                          {formatStatus(issue.category)}
+                        </p>
+                      </div>
+
+                      <span
+                        className={`status-badge status-${issue.status
+                          ?.toLowerCase()
+                          .replace(/_/g, "-")}`}
+                      >
+                        {formatStatus(issue.status)}
+                      </span>
                     </div>
 
-                    <span
-                      className={`status-badge status-${issue.status
-                        ?.toLowerCase()
-                        .replace(/_/g, "-")}`}
-                    >
-                      {formatStatus(issue.status)}
-                    </span>
-                  </div>
-
-                  <p className="complaint-description">
-                    {issue.description || "No description provided."}
-                  </p>
-
-                  <div className="complaint-meta">
-                    <span>
-                      Assigned {formatDate(assignment.assignedAt)}
-                    </span>
-
-                    <span>
-                      {stage}
-                    </span>
-                  </div>
-
-                  {(assignment.department || assignment.ward) && (
-                    <div className="complaint-meta">
-                      {assignment.department && (
-                        <span>
-                          Department: {assignment.department.name}
-                        </span>
-                      )}
-
-                      {assignment.ward && (
-                        <span>
-                          Ward: {assignment.ward.name}
-                          {assignment.ward.code
-                            ? ` (${assignment.ward.code})`
-                            : ""}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {issue.address && (
-                    <p className="complaint-address">
-                      📍 {issue.address}
+                    <p className="complaint-description">
+                      {issue.description ||
+                        "No description provided."}
                     </p>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
+
+                    <div className="complaint-meta">
+                      <span>
+                        Assigned{" "}
+                        {formatDate(assignment.assignedAt)}
+                      </span>
+
+                      <span>
+                        {stage}
+                      </span>
+                    </div>
+
+                    {(assignment.department ||
+                      assignment.ward) && (
+                      <div className="complaint-meta">
+                        {assignment.department && (
+                          <span>
+                            Department:{" "}
+                            {assignment.department.name}
+                          </span>
+                        )}
+
+                        {assignment.ward && (
+                          <span>
+                            Ward: {assignment.ward.name}
+                            {assignment.ward.code
+                              ? ` (${assignment.ward.code})`
+                              : ""}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {issue.address && (
+                      <p className="complaint-address">
+                        📍 {issue.address}
+                      </p>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </section>
       )}
     </div>
