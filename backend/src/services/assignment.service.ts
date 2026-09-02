@@ -424,3 +424,30 @@ export async function getMyAssignments(
     },
   });
 }
+
+export async function getAllAssignments() {
+  return prisma.assignment.findMany({
+    include: {
+      issue: {
+        include: {
+          department: true,
+          ward: true,
+          sla: true,
+        },
+      },
+      authority: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      department: true,
+      ward: true,
+    },
+    orderBy: {
+      assignedAt: "desc",
+    },
+  });
+}

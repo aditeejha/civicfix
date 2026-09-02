@@ -1,12 +1,21 @@
-import { Response } from "express";
-import { AuthenticatedRequest } from "../middleware/auth.middleware";
+import { Request, Response } from "express";
 import {
   createAssignment,
   acceptAssignment,
   startAssignment,
   resolveAssignment,
   getMyAssignments,
+  getAllAssignments,
 } from "../services/assignment.service";
+
+interface AuthenticatedRequest extends Request {
+  user?: {
+    userId: string;
+    role: string;
+  };
+}
+
+// CREATE ASSIGNMENT
 export async function createAssignmentController(
   req: AuthenticatedRequest,
   res: Response
@@ -27,7 +36,7 @@ export async function createAssignmentController(
 
     if (!issueId || !authorityId) {
       return res.status(400).json({
-        message: "Issue ID and authority ID are required",
+        message: "issueId and authorityId are required",
       });
     }
 
@@ -43,6 +52,11 @@ export async function createAssignmentController(
       assignment,
     });
   } catch (error) {
+    console.error(
+      "Create assignment error:",
+      error
+    );
+
     if (error instanceof Error) {
       if (error.message === "ISSUE_NOT_FOUND") {
         return res.status(404).json({
@@ -69,14 +83,13 @@ export async function createAssignmentController(
       }
     }
 
-    console.error("Create assignment error:", error);
-
     return res.status(500).json({
       message: "Something went wrong while assigning the issue",
     });
   }
 }
 
+// ACCEPT ASSIGNMENT
 export async function acceptAssignmentController(
   req: AuthenticatedRequest,
   res: Response
@@ -90,12 +103,6 @@ export async function acceptAssignmentController(
 
     const { assignmentId } = req.params;
 
-    if (!assignmentId) {
-      return res.status(400).json({
-        message: "Assignment ID is required",
-      });
-    }
-
     const assignment = await acceptAssignment(
       assignmentId,
       req.user.userId
@@ -106,6 +113,11 @@ export async function acceptAssignmentController(
       assignment,
     });
   } catch (error) {
+    console.error(
+      "Accept assignment error:",
+      error
+    );
+
     if (error instanceof Error) {
       if (error.message === "ASSIGNMENT_NOT_FOUND") {
         return res.status(404).json({
@@ -115,25 +127,26 @@ export async function acceptAssignmentController(
 
       if (error.message === "NOT_ASSIGNED_AUTHORITY") {
         return res.status(403).json({
-          message: "You are not assigned to this issue",
+          message:
+            "You are not the authority assigned to this issue",
         });
       }
 
       if (error.message === "ALREADY_ACCEPTED") {
-        return res.status(409).json({
+        return res.status(400).json({
           message: "Assignment has already been accepted",
         });
       }
     }
 
-    console.error("Accept assignment error:", error);
-
     return res.status(500).json({
-      message: "Something went wrong while accepting the assignment",
+      message:
+        "Something went wrong while accepting the assignment",
     });
   }
 }
 
+// START ASSIGNMENT
 export async function startAssignmentController(
   req: AuthenticatedRequest,
   res: Response
@@ -147,12 +160,6 @@ export async function startAssignmentController(
 
     const { assignmentId } = req.params;
 
-    if (!assignmentId) {
-      return res.status(400).json({
-        message: "Assignment ID is required",
-      });
-    }
-
     const issue = await startAssignment(
       assignmentId,
       req.user.userId
@@ -163,6 +170,11 @@ export async function startAssignmentController(
       issue,
     });
   } catch (error) {
+    console.error(
+      "Start assignment error:",
+      error
+    );
+
     if (error instanceof Error) {
       if (error.message === "ASSIGNMENT_NOT_FOUND") {
         return res.status(404).json({
@@ -172,31 +184,34 @@ export async function startAssignmentController(
 
       if (error.message === "NOT_ASSIGNED_AUTHORITY") {
         return res.status(403).json({
-          message: "You are not assigned to this issue",
+          message:
+            "You are not the authority assigned to this issue",
         });
       }
 
       if (error.message === "ASSIGNMENT_NOT_ACCEPTED") {
         return res.status(400).json({
-          message: "Assignment must be accepted before work can start",
+          message:
+            "Assignment must be accepted before starting work",
         });
       }
 
       if (error.message === "INVALID_STATUS") {
-        return res.status(409).json({
-          message: "Issue is not in a valid state to start work",
+        return res.status(400).json({
+          message:
+            "Issue cannot be started in its current status",
         });
       }
     }
 
-    console.error("Start assignment error:", error);
-
     return res.status(500).json({
-      message: "Something went wrong while starting the work",
+      message:
+        "Something went wrong while starting the assignment",
     });
   }
 }
 
+// RESOLVE ASSIGNMENT
 export async function resolveAssignmentController(
   req: AuthenticatedRequest,
   res: Response
@@ -211,12 +226,6 @@ export async function resolveAssignmentController(
     const { assignmentId } = req.params;
     const { note } = req.body;
 
-    if (!assignmentId) {
-      return res.status(400).json({
-        message: "Assignment ID is required",
-      });
-    }
-
     const assignment = await resolveAssignment(
       assignmentId,
       req.user.userId,
@@ -228,6 +237,11 @@ export async function resolveAssignmentController(
       assignment,
     });
   } catch (error) {
+    console.error(
+      "Resolve assignment error:",
+      error
+    );
+
     if (error instanceof Error) {
       if (error.message === "ASSIGNMENT_NOT_FOUND") {
         return res.status(404).json({
@@ -237,31 +251,34 @@ export async function resolveAssignmentController(
 
       if (error.message === "NOT_ASSIGNED_AUTHORITY") {
         return res.status(403).json({
-          message: "You are not assigned to this issue",
+          message:
+            "You are not the authority assigned to this issue",
         });
       }
 
       if (error.message === "ASSIGNMENT_NOT_ACCEPTED") {
         return res.status(400).json({
-          message: "Assignment must be accepted before resolution",
+          message:
+            "Assignment must be accepted before resolving",
         });
       }
 
       if (error.message === "INVALID_STATUS") {
-        return res.status(409).json({
-          message: "Issue is not in a valid state to be resolved",
+        return res.status(400).json({
+          message:
+            "Issue must be in progress before it can be resolved",
         });
       }
     }
 
-    console.error("Resolve assignment error:", error);
-
     return res.status(500).json({
-      message: "Something went wrong while resolving the issue",
+      message:
+        "Something went wrong while resolving the assignment",
     });
   }
 }
 
+// GET MY ASSIGNMENTS
 export async function getMyAssignmentsController(
   req: AuthenticatedRequest,
   res: Response
@@ -273,16 +290,46 @@ export async function getMyAssignmentsController(
       });
     }
 
-    const assignments = await getMyAssignments(req.user.userId);
+    const assignments = await getMyAssignments(
+      req.user.userId
+    );
 
     return res.status(200).json({
       assignments,
     });
   } catch (error) {
-    console.error("Get my assignments error:", error);
+    console.error(
+      "Get my assignments error:",
+      error
+    );
 
     return res.status(500).json({
-      message: "Something went wrong while fetching assignments",
+      message:
+        "Something went wrong while fetching assignments",
+    });
+  }
+}
+
+// GET ALL ASSIGNMENTS — ADMIN
+export async function getAllAssignmentsController(
+  _req: AuthenticatedRequest,
+  res: Response
+) {
+  try {
+    const assignments = await getAllAssignments();
+
+    return res.status(200).json({
+      assignments,
+    });
+  } catch (error) {
+    console.error(
+      "Get all assignments error:",
+      error
+    );
+
+    return res.status(500).json({
+      message:
+        "Something went wrong while fetching assignments",
     });
   }
 }
