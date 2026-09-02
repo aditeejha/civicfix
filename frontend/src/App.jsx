@@ -14,6 +14,10 @@ import Register from "./pages/auth/Register";
 import CitizenDashboard from "./pages/citizen/CitizenDashboard";
 import ReportIssue from "./pages/citizen/ReportIssue";
 import MyComplaints from "./pages/citizen/MyComplaints";
+import ComplaintDetails from "./pages/citizen/ComplaintDetails";
+
+import AuthorityDashboard from "./pages/authority/AuthorityDashboard";
+import AuthorityIssueDetails from "./pages/authority/AuthorityIssueDetails";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminIssues from "./pages/admin/AdminIssues";
@@ -40,14 +44,6 @@ function Home() {
           </button>
         </Link>
       </div>
-    </div>
-  );
-}
-
-function AuthorityDashboard() {
-  return (
-    <div className="page">
-      <h1>Authority Dashboard</h1>
     </div>
   );
 }
@@ -100,6 +96,11 @@ export default function App() {
             path="/citizen/complaints"
             element={<MyComplaints />}
           />
+
+          <Route
+            path="/citizen/complaints/:id"
+            element={<ComplaintDetails />}
+          />
         </Route>
 
         {/* ─────────────────────────────────────
@@ -118,9 +119,12 @@ export default function App() {
         >
           <Route
             path="/authority"
-            element={
-              <AuthorityDashboard />
-            }
+            element={<AuthorityDashboard />}
+          />
+
+          <Route
+            path="/authority/issues/:id"
+            element={<AuthorityIssueDetails />}
           />
         </Route>
 
