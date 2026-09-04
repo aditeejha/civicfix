@@ -168,6 +168,14 @@ export async function acceptAssignment(
     throw new Error("ALREADY_ACCEPTED");
   }
 
+  // Temporary debug log to verify that the issue
+  // contains the expected citizen complaint(s).
+  console.log(
+    "ACCEPT ASSIGNMENT DEBUG:",
+    assignment.issueId,
+    assignment.issue.complaints
+  );
+
   const result = await prisma.$transaction(
     async (tx) => {
       const updatedAssignment =

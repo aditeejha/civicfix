@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../../services/api";
+import api from "../../api/axios";
 
 function getAssignmentStatus(assignment) {
   const issueStatus = assignment.issue?.status;

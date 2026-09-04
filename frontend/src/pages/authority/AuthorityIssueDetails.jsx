@@ -116,11 +116,14 @@ export default function AuthorityIssueDetails() {
   }
 
   function handleAccept() {
-    performAssignmentAction(
-      "accept",
-      "Assignment accepted successfully."
-    );
-  }
+  console.log("ACCEPT BUTTON CLICKED");
+  console.log("CURRENT ASSIGNMENT:", assignment);
+
+  performAssignmentAction(
+    "accept",
+    "Assignment accepted successfully."
+  );
+}
 
   function handleStart() {
     performAssignmentAction(

@@ -1618,3 +1618,847 @@ textarea:focus {
     gap: 5px;
   }
 }
+
+/* =========================================================
+   CIVICFIX — POLISHED UI OVERRIDES
+   ========================================================= */
+
+:root {
+  --bg: #f5f7f6;
+  --surface: #ffffff;
+  --surface-soft: #f0f5f3;
+
+  --text: #172b4d;
+  --text-secondary: #425466;
+  --text-muted: #718096;
+
+  --border: #dfe7e4;
+  --border-strong: #cbd8d4;
+
+  --primary: #0f766e;
+  --primary-dark: #0b5f59;
+  --primary-soft: #e6fffb;
+
+  --success: #15803d;
+  --success-soft: #ecfdf3;
+
+  --warning: #b45309;
+  --warning-soft: #fff7ed;
+
+  --danger: #b42318;
+  --danger-soft: #fef2f2;
+
+  --purple: #6941c6;
+  --purple-soft: #f4f3ff;
+
+  --shadow-sm: 0 2px 8px rgba(16, 42, 67, 0.05);
+  --shadow-md: 0 10px 28px rgba(16, 42, 67, 0.09);
+  --shadow-lg: 0 24px 60px rgba(16, 42, 67, 0.14);
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  --transition: 180ms ease;
+}
+
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
+body {
+  background:
+    radial-gradient(
+      circle at 0% 0%,
+      rgba(15, 118, 110, 0.055),
+      transparent 30%
+    ),
+    var(--bg);
+  color: var(--text);
+}
+
+::selection {
+  background: #bcece6;
+  color: #102a43;
+}
+
+a {
+  transition:
+    color var(--transition),
+    opacity var(--transition);
+}
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.page {
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 46px 0 80px;
+}
+
+.page-header {
+  margin-bottom: 34px;
+}
+
+.page-header h1,
+.page > h1 {
+  color: var(--text);
+  font-size: clamp(32px, 4vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+}
+
+.page-header p {
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.eyebrow {
+  color: var(--primary) !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.16em;
+}
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+
+.dashboard {
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at 85% 0%,
+      rgba(15, 118, 110, 0.06),
+      transparent 28%
+    ),
+    var(--bg);
+}
+
+.dashboard-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+
+  min-height: 76px;
+  padding: 0 max(24px, calc((100vw - 1180px) / 2));
+
+  background: rgba(255, 255, 255, 0.94);
+  border-bottom: 1px solid rgba(223, 231, 228, 0.9);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: 21px;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+}
+
+.dashboard-header p {
+  margin: 1px 0 0;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dashboard-user {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.dashboard-user a,
+.dashboard-user button {
+  min-height: 38px;
+  padding: 8px 13px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dashboard-user a {
+  color: var(--text-secondary);
+}
+
+.dashboard-user a:hover {
+  background: var(--surface-soft);
+  color: var(--primary);
+}
+
+.dashboard-user button {
+  background: var(--text);
+  color: white;
+}
+
+.dashboard-user button:hover {
+  background: #0f3b5d;
+}
+
+/* =========================================================
+   DASHBOARD CONTENT
+   ========================================================= */
+
+.dashboard-content {
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 46px 0 80px;
+}
+
+.welcome-section {
+  margin-bottom: 34px;
+}
+
+.welcome-section h2 {
+  margin: 0 0 10px;
+  color: var(--text);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+}
+
+.welcome-section > p:last-child {
+  max-width: 680px;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* =========================================================
+   DASHBOARD ACTION CARDS
+   ========================================================= */
+
+.dashboard-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.dashboard-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+
+  min-height: 142px;
+  padding: 22px;
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition),
+    border-color var(--transition);
+}
+
+.dashboard-card::after {
+  position: absolute;
+  right: 18px;
+  bottom: 17px;
+  content: "→";
+  color: #a0aaa7;
+  font-size: 18px;
+  transition:
+    transform var(--transition),
+    color var(--transition);
+}
+
+.dashboard-card:hover {
+  transform: translateY(-3px);
+  border-color: #b8d5cf;
+  box-shadow: var(--shadow-md);
+}
+
+.dashboard-card:hover::after {
+  transform: translateX(4px);
+  color: var(--primary);
+}
+
+.dashboard-card h3 {
+  margin: 2px 0 6px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.dashboard-card p {
+  margin: 0;
+  max-width: 240px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--primary);
+
+  font-size: 21px;
+  font-weight: 700;
+}
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+.details-card,
+.issue-card,
+.complaint-card,
+.stat-card {
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.details-card:hover,
+.issue-card:hover,
+.complaint-card:hover {
+  border-color: #c6d8d3;
+  box-shadow: var(--shadow-md);
+}
+
+/* =========================================================
+   STAT CARDS
+   ========================================================= */
+
+.stats-grid {
+  gap: 14px;
+}
+
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 132px;
+  padding: 21px;
+}
+
+.stat-card::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  content: "";
+  background: var(--primary);
+  opacity: 0.8;
+}
+
+.stat-card h2 {
+  margin-top: 12px;
+}
+
+/* =========================================================
+   BUTTON SYSTEM
+   ========================================================= */
+
+/*
+   Important:
+   Keep generic buttons visually neutral.
+   Individual actions get explicit variants below.
+*/
+
+button {
+  border: 0;
+  outline: none;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(15, 118, 110, 0.2);
+  outline-offset: 2px;
+}
+
+.page button,
+.issue-card-actions button,
+.modal-actions button,
+.admin-actions button,
+.assignment-actions button,
+.verification-actions button,
+.workflow-primary-button,
+.workflow-success-button {
+  min-height: 43px;
+  padding: 10px 17px;
+  border-radius: 10px;
+
+  background: var(--primary);
+  color: white;
+
+  font-size: 13px;
+  font-weight: 750;
+
+  box-shadow: 0 2px 5px rgba(15, 118, 110, 0.12);
+
+  transition:
+    transform var(--transition),
+    background var(--transition),
+    box-shadow var(--transition);
+}
+
+.page button:hover:not(:disabled),
+.issue-card-actions button:hover:not(:disabled),
+.modal-actions button:hover:not(:disabled),
+.admin-actions button:hover:not(:disabled),
+.assignment-actions button:hover:not(:disabled),
+.verification-actions button:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(15, 118, 110, 0.18);
+}
+
+.page button:active:not(:disabled),
+.issue-card-actions button:active:not(:disabled),
+.modal-actions button:active:not(:disabled),
+.admin-actions button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* =========================================================
+   PRIMARY BUTTON
+   ========================================================= */
+
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 44px;
+  padding: 10px 18px;
+
+  border-radius: 10px;
+  background: var(--primary) !important;
+  color: white !important;
+
+  font-weight: 750;
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.15);
+}
+
+.primary-button:hover {
+  background: var(--primary-dark) !important;
+}
+
+/* =========================================================
+   SECONDARY BUTTON
+   ========================================================= */
+
+.secondary-button {
+  background: #eef2f1 !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+}
+
+.secondary-button:hover {
+  background: #e1e9e6 !important;
+  color: var(--text) !important;
+}
+
+/* =========================================================
+   DANGER
+   ========================================================= */
+
+.verification-danger-button {
+  background: #b42318 !important;
+}
+
+.verification-danger-button:hover {
+  background: #912018 !important;
+}
+
+/* =========================================================
+   ACTION LAYOUT
+   ========================================================= */
+
+.issue-card-actions,
+.assignment-actions,
+.verification-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.issue-card-actions {
+  margin-top: 22px;
+}
+
+.assignment-actions {
+  padding-top: 22px;
+}
+
+/*
+   Prevent buttons wrapped inside Links from becoming
+   awkward inline elements.
+*/
+
+.issue-card-actions a {
+  display: inline-flex;
+}
+
+.issue-card-actions a button {
+  margin: 0;
+}
+
+/* =========================================================
+   FORMS
+   ========================================================= */
+
+.form-group label {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea,
+input,
+select,
+textarea {
+  min-height: 46px;
+  border-color: var(--border-strong);
+  border-radius: 10px;
+  background: white;
+}
+
+textarea {
+  min-height: 120px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
+}
+
+/* =========================================================
+   STATUS BADGES
+   ========================================================= */
+
+.status-badge {
+  min-height: 29px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+/* =========================================================
+   STATUS COLORS
+   ========================================================= */
+
+.status-reported {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.status-ai-verified {
+  background: #f4f3ff;
+  color: #6941c6;
+}
+
+.status-assigned {
+  background: #ecfeff;
+  color: #0e7490;
+}
+
+.status-acknowledged {
+  background: #fff7ed;
+  color: #b45309;
+}
+
+.status-in-progress {
+  background: #e6f7f5;
+  color: #0f766e;
+}
+
+.status-resolved {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.status-citizen-verification {
+  background: #f4f3ff;
+  color: #6941c6;
+}
+
+.status-closed {
+  background: #ecfdf3;
+  color: #166534;
+}
+
+.status-duplicate {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.status-sla-breached {
+  background: #fef2f2;
+  color: #b42318;
+}
+
+.status-escalated {
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.status-reopened {
+  background: #fff7ed;
+  color: #b45309;
+}
+
+/* =========================================================
+   AUTH PAGES
+   ========================================================= */
+
+.auth-page {
+  position: relative;
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 10% 10%,
+      rgba(15, 118, 110, 0.12),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 90% 90%,
+      rgba(16, 42, 67, 0.08),
+      transparent 30%
+    ),
+    var(--bg);
+}
+
+.auth-card {
+  position: relative;
+  padding: 38px;
+  border: 1px solid rgba(223, 231, 228, 0.9);
+  border-radius: 22px;
+  box-shadow: var(--shadow-lg);
+}
+
+.auth-card::before {
+  display: block;
+  width: 42px;
+  height: 4px;
+  margin-bottom: 22px;
+  content: "";
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.auth-card h1 {
+  color: var(--text);
+  font-size: 32px;
+  font-weight: 850;
+}
+
+.auth-card button[type="submit"] {
+  min-height: 48px;
+  margin-top: 8px;
+  border-radius: 11px;
+  background: var(--primary);
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.auth-card button[type="submit"]:hover {
+  background: var(--primary-dark);
+}
+
+/* =========================================================
+   MODALS
+   ========================================================= */
+
+.modal-backdrop {
+  background: rgba(16, 42, 67, 0.55);
+  backdrop-filter: blur(7px);
+}
+
+.modal {
+  border-radius: 22px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* =========================================================
+   ISSUE DETAILS
+   ========================================================= */
+
+.details-header {
+  padding: 32px;
+  border-radius: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.details-header h1 {
+  color: var(--text);
+}
+
+.location-box,
+.issue-assignment,
+.workflow-info,
+.organization-highlight,
+.detail-item {
+  background: var(--surface-soft);
+  border-color: var(--border);
+}
+
+/* =========================================================
+   TIMELINE
+   ========================================================= */
+
+.timeline-marker {
+  background: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.timeline-item:not(.timeline-item-last) .timeline-marker {
+  background: var(--success);
+  box-shadow: 0 0 0 2px var(--success);
+}
+
+/* =========================================================
+   SUCCESS / ERROR
+   ========================================================= */
+
+.form-success {
+  background: var(--success-soft);
+  border-color: #bbebc9;
+  color: var(--success);
+}
+
+.form-error {
+  background: var(--danger-soft);
+  border-color: #fecdca;
+  color: var(--danger);
+}
+
+/* =========================================================
+   EMPTY STATES
+   ========================================================= */
+
+.empty-state {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: #cbd8d4;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .dashboard-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header {
+    padding: 0 18px;
+  }
+
+  .dashboard-content {
+    width: min(100% - 36px, 760px);
+  }
+}
+
+@media (max-width: 600px) {
+  .page {
+    width: calc(100% - 28px);
+    padding-top: 30px;
+  }
+
+  .dashboard-header {
+    position: relative;
+    min-height: auto;
+    padding: 17px 14px;
+    align-items: flex-start;
+  }
+
+  .dashboard-user {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .dashboard-user a,
+  .dashboard-user button {
+    min-height: 35px;
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+
+  .dashboard-content {
+    width: calc(100% - 28px);
+    padding-top: 32px;
+  }
+
+  .welcome-section h2 {
+    font-size: 28px;
+  }
+
+  .dashboard-card {
+    min-height: 125px;
+  }
+
+  .issue-card-actions,
+  .assignment-actions,
+  .verification-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .issue-card-actions > *,
+  .issue-card-actions a,
+  .issue-card-actions button,
+  .assignment-actions button,
+  .verification-actions button {
+    width: 100%;
+  }
+
+  .auth-card {
+    padding: 30px 22px;
+  }
+}
+
+@media (max-width: 400px) {
+  .dashboard-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dashboard-user {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

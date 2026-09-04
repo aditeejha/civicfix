@@ -11,6 +11,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 
+import PublicIssues from "./pages/public/PublicIssues";
+import PublicIssueDetails from "./pages/public/PublicIssueDetails";
+
 import CitizenDashboard from "./pages/citizen/CitizenDashboard";
 import ReportIssue from "./pages/citizen/ReportIssue";
 import MyComplaints from "./pages/citizen/MyComplaints";
@@ -52,6 +55,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         {/* PUBLIC */}
+
         <Route
           path="/"
           element={<Home />}
@@ -67,7 +71,18 @@ export default function App() {
           element={<Register />}
         />
 
+        <Route
+          path="/issues"
+          element={<PublicIssues />}
+        />
+
+        <Route
+          path="/issues/:id"
+          element={<PublicIssueDetails />}
+        />
+
         {/* CITIZEN */}
+
         <Route
           element={
             <ProtectedRoute
@@ -97,6 +112,7 @@ export default function App() {
         </Route>
 
         {/* AUTHORITY */}
+
         <Route
           element={
             <ProtectedRoute
@@ -119,6 +135,7 @@ export default function App() {
         </Route>
 
         {/* ADMIN */}
+
         <Route
           element={
             <ProtectedRoute
@@ -153,6 +170,7 @@ export default function App() {
         </Route>
 
         {/* FALLBACK */}
+
         <Route
           path="*"
           element={<Navigate to="/" replace />}
